@@ -11,14 +11,20 @@ export default function HomePage() {
   const [newCoins, setNewCoins] = useState([])
 
   useEffect(() => {
-    getGlobalData().then(setGlobal).catch(console.error)
-    getTrending().then(data => setTrending(data.slice(0, 3))).catch(console.error)
-    getCoins(1, 100).then(data => {
-      if (!Array.isArray(data)) return
-      const g = [...data].sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0)).slice(0, 3)
-      setGainers(g)
-      setNewCoins(data.slice(0, 3))
-    }).catch(console.error)
+    const fetchData = () => {
+      getGlobalData().then(setGlobal).catch(console.error)
+      getTrending().then(data => setTrending(data.slice(0, 3))).catch(console.error)
+      getCoins(1, 100).then(data => {
+        if (!Array.isArray(data)) return
+        const g = [...data].sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0)).slice(0, 3)
+        setGainers(g)
+        setNewCoins(data.slice(0, 3))
+      }).catch(console.error)
+    }
+
+    fetchData()
+    const interval = setInterval(fetchData, 600000) // Refresh every 10 minutes
+    return () => clearInterval(interval)
   }, [])
 
   const mcapChange = global?.market_cap_change_percentage_24h_usd || 0

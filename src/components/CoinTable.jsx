@@ -26,10 +26,16 @@ export default function CoinTable() {
   })
 
   useEffect(() => {
-    setLoading(true)
-    getCoins(page, perPage)
-      .then(data => { setCoins(data || []); setLoading(false) })
-      .catch(() => setLoading(false))
+    const fetchData = () => {
+      setLoading(true)
+      getCoins(page, perPage)
+        .then(data => { setCoins(data || []); setLoading(false) })
+        .catch(() => setLoading(false))
+    }
+
+    fetchData()
+    const interval = setInterval(fetchData, 300000) // Refresh every 5 minutes
+    return () => clearInterval(interval)
   }, [page, perPage])
 
   useEffect(() => {
