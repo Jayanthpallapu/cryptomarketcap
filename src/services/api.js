@@ -1,4 +1,4 @@
-// CoinGecko API - Direct calls (no proxy needed, CORS supported)
+// CoinGecko Free Public API - No API key required
 const BASE = 'https://api.coingecko.com/api/v3';
 
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
@@ -18,39 +18,34 @@ function setCache(key, data) {
   cache.set(key, { data, timestamp: Date.now() });
 }
 
+// Cache everything for 1 hour to stay within free API limits
+const ONE_HOUR = 60 * 60 * 1000;
+
 const CACHE_TTL = {
-  global: 3 * 60 * 1000,
-  coins: 3 * 60 * 1000,
-  trending: 5 * 60 * 1000,
-  coinDetail: 3 * 60 * 1000,
-  chart: 5 * 60 * 1000,
-  search: 2 * 60 * 1000,
-  exchanges: 5 * 60 * 1000,
+  global: ONE_HOUR,
+  coins: ONE_HOUR,
+  trending: ONE_HOUR,
+  coinDetail: ONE_HOUR,
+  chart: ONE_HOUR,
+  search: 5 * 60 * 1000,
+  exchanges: ONE_HOUR,
 };
 
 // ─── Fetch with Retry ───────────────────────────────────────────────
 async function fetchWithRetry(url, retries = 3) {
-  // VITE_CG_API_KEY is embedded at build time by Vite
-  const apiKey = import.meta.env.VITE_CG_API_KEY;
-  const headers = { 'Accept': 'application/json' };
-  if (apiKey) {
-    headers['x-cg-demo-api-key'] = apiKey;
-  }
-
   for (let i = 0; i < retries; i++) {
     try {
-      const res = await fetch(url, { headers });
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json' }
+      });
 
       if (res.status === 429) {
         console.warn(`Rate limit hit (attempt ${i + 1}/${retries}), waiting...`);
-        await delay(4000 * (i + 1));
+        await delay(5000 * (i + 1));
         continue;
       }
 
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (e) {
       if (i === retries - 1) throw e;

@@ -39,7 +39,7 @@ export default function CoinTable() {
             setCoins(data)
           } else if (coins.length === 0) {
             // Only show error if we have no data at all
-            setError('Failed to fetch coins. Please check your API key or try again later.')
+            setError('Failed to fetch coins. Please try again later.')
           }
           setLoading(false) 
         })
@@ -54,7 +54,7 @@ export default function CoinTable() {
     }
 
     fetchData(false)
-    const interval = setInterval(() => fetchData(true), 300000) // Background refresh every 5 minutes
+    const interval = setInterval(() => fetchData(true), 3600000) // Background refresh every 1 hour
     return () => clearInterval(interval)
   }, [page, perPage])
 

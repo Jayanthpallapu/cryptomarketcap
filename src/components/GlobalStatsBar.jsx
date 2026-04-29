@@ -9,7 +9,7 @@ export default function GlobalStatsBar() {
     getGlobalData().then(setData).catch(console.error)
     const interval = setInterval(() => {
       getGlobalData().then(setData).catch(console.error)
-    }, 60000)
+    }, 3600000) // Refresh every 1 hour
     return () => clearInterval(interval)
   }, [])
 
