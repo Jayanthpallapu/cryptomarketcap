@@ -7,6 +7,8 @@ import CoinDetailPage from './pages/CoinDetailPage'
 import ExchangesPage from './pages/ExchangesPage'
 import TrendingPage from './pages/TrendingPage'
 import WatchlistPage from './pages/WatchlistPage'
+import GainersLosersPage from './pages/GainersLosersPage'
+import NewCoinsPage from './pages/NewCoinsPage'
 
 export default function App() {
   return (
@@ -20,6 +22,8 @@ export default function App() {
           <Route path="/exchanges" element={<ExchangesPage />} />
           <Route path="/trending" element={<TrendingPage />} />
           <Route path="/watchlist" element={<WatchlistPage />} />
+          <Route path="/gainers-losers" element={<GainersLosersPage />} />
+          <Route path="/new" element={<NewCoinsPage />} />
         </Routes>
       </main>
       <Footer />
