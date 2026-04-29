@@ -1,7 +1,5 @@
-// All API calls go through /api/coingecko
-// In Development: Vite dev server proxy (vite.config.js)
-// In Production: Vercel Serverless Function (api/coingecko/[...path].js)
-const BASE = '/api/coingecko';
+// CoinGecko API - Direct calls (no proxy needed, CORS supported)
+const BASE = 'https://api.coingecko.com/api/v3';
 
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -32,15 +30,20 @@ const CACHE_TTL = {
 
 // ─── Fetch with Retry ───────────────────────────────────────────────
 async function fetchWithRetry(url, retries = 3) {
+  // VITE_CG_API_KEY is embedded at build time by Vite
+  const apiKey = import.meta.env.VITE_CG_API_KEY;
+  const headers = { 'Accept': 'application/json' };
+  if (apiKey) {
+    headers['x-cg-demo-api-key'] = apiKey;
+  }
+
   for (let i = 0; i < retries; i++) {
     try {
-      const res = await fetch(url, {
-        headers: { 'Accept': 'application/json' }
-      });
+      const res = await fetch(url, { headers });
 
       if (res.status === 429) {
-        console.warn(`Rate limit hit (attempt ${i + 1}), waiting...`);
-        await delay(3000 * (i + 1));
+        console.warn(`Rate limit hit (attempt ${i + 1}/${retries}), waiting...`);
+        await delay(4000 * (i + 1));
         continue;
       }
 
