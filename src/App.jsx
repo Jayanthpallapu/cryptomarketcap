@@ -10,7 +10,7 @@ import WatchlistPage from './pages/WatchlistPage'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <GlobalStatsBar />
       <Navbar />
       <main style={{ minHeight: '60vh' }}>
