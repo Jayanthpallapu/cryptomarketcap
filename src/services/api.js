@@ -3,9 +3,13 @@ const BASE = '/api/coingecko';
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
 async function fetchWithRetry(url, retries = 3) {
+  const apiKey = import.meta.env.VITE_CG_API_KEY;
+  const headers = { 'Accept': 'application/json' };
+  if (apiKey) headers['x-cg-demo-api-key'] = apiKey;
+
   for (let i = 0; i < retries; i++) {
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { headers });
       if (res.status === 429) { await delay(2000 * (i + 1)); continue; }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
