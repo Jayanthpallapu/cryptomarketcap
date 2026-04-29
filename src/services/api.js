@@ -75,17 +75,54 @@ export async function getGlobalData() {
 
 export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc') {
   const key = `coins_${page}_${perPage}_${order}`;
-  return cachedFetch(key, CACHE_TTL.coins, () =>
-    fetchWithRetry(
+  return cachedFetch(key, CACHE_TTL.coins, async () => {
+    const data = await fetchWithRetry(
       `${BASE}/coins/markets?vs_currency=usd&order=${order}&per_page=${perPage}&page=${page}&sparkline=true&price_change_percentage=1h,24h,7d`
-    )
-  );
+    );
+    
+    // Inject Starlink as requested
+    const starlink = {
+      id: 'starlink-custom',
+      symbol: 'starl',
+      name: 'Starlink',
+      image: 'https://assets.coingecko.com/coins/images/16146/large/starl.png',
+      current_price: 0.00000123,
+      market_cap: 123000000,
+      market_cap_rank: 1,
+      price_change_percentage_24h: 1000,
+      price_change_percentage_1h_in_currency: 100,
+      price_change_percentage_7d_in_currency: 1000,
+      total_volume: 50000000,
+      circulating_supply: 100000000000,
+      max_supply: 100000000000,
+      sparkline_in_7d: { price: Array.from({length: 100}, () => Math.random() * 10 + 5) }
+    };
+    
+    return [starlink, ...data];
+  });
 }
 
 export async function getTrending() {
   return cachedFetch('trending', CACHE_TTL.trending, async () => {
     const data = await fetchWithRetry(`${BASE}/search/trending`);
-    return data.coins || [];
+    const coins = data.coins || [];
+    
+    const starlink = {
+      item: {
+        id: 'starlink',
+        name: 'Starlink',
+        symbol: 'STARL',
+        market_cap_rank: 1,
+        thumb: 'https://assets.coingecko.com/coins/images/16146/thumb/starl.png',
+        large: 'https://assets.coingecko.com/coins/images/16146/large/starl.png',
+        data: {
+          price_change_percentage_24h: { usd: 1000 },
+          price: '$0.00000123'
+        }
+      }
+    };
+    
+    return [starlink, ...coins];
   });
 }
 
