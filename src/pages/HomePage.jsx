@@ -14,9 +14,10 @@ export default function HomePage() {
     getGlobalData().then(setGlobal).catch(console.error)
     getTrending().then(data => setTrending(data.slice(0, 3))).catch(console.error)
     getCoins(1, 100).then(data => {
-      const g = [...data].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 3)
+      if (!Array.isArray(data)) return
+      const g = [...data].sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0)).slice(0, 3)
       setGainers(g)
-      setNewCoins(data.slice(0, 3)) // Proxy for new
+      setNewCoins(data.slice(0, 3))
     }).catch(console.error)
   }, [])
 

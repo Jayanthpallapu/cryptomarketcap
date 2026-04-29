@@ -12,7 +12,7 @@ import NewCoinsPage from './pages/NewCoinsPage'
 
 export default function App() {
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <BrowserRouter>
       <GlobalStatsBar />
       <Navbar />
       <main style={{ minHeight: '60vh' }}>
