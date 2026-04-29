@@ -82,10 +82,10 @@ export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc
     
     // Inject Starlink as requested
     const starlink = {
-      id: 'starlink', // Changed to real ID so detail page works
+      id: 'starlink-2', // Updated to the specific version provided by user
       symbol: 'starl',
       name: 'Starlink',
-      image: 'https://assets.coingecko.com/coins/images/16146/large/starl.png',
+      image: 'https://assets.coingecko.com/coins/images/22049/large/starlink.png', // The red circle logo
       current_price: 0.00000123,
       market_cap: 123000000,
       market_cap_rank: 1,
@@ -109,12 +109,12 @@ export async function getTrending() {
     
     const starlink = {
       item: {
-        id: 'starlink',
+        id: 'starlink-2',
         name: 'Starlink',
         symbol: 'STARL',
         market_cap_rank: 1,
-        thumb: 'https://assets.coingecko.com/coins/images/16146/thumb/starl.png',
-        large: 'https://assets.coingecko.com/coins/images/16146/large/starl.png',
+        thumb: 'https://assets.coingecko.com/coins/images/22049/thumb/starlink.png',
+        large: 'https://assets.coingecko.com/coins/images/22049/large/starlink.png',
         data: {
           price_change_percentage_24h: { usd: 1000 },
           price: '$0.00000123'
