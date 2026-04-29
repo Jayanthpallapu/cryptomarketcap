@@ -1,20 +1,35 @@
-// In development, Vite proxies /api/coingecko → https://api.coingecko.com/api/v3
-// In production, we call the CoinGecko API directly
-const isDev = import.meta.env.DEV;
-const BASE = isDev ? '/api/coingecko' : 'https://api.coingecko.com/api/v3';
+// Using a relative path for both Dev and Production.
+// In Dev: Vite handles the proxy (vite.config.js)
+// In Production: Vercel handles the proxy (vercel.json)
+const BASE = '/api/coingecko';
 
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
 async function fetchWithRetry(url, retries = 3) {
   const apiKey = import.meta.env.VITE_CG_API_KEY;
   const headers = { 'Accept': 'application/json' };
-  if (apiKey) headers['x-cg-demo-api-key'] = apiKey;
+  
+  // CoinGecko Demo API uses x-cg-demo-api-key header
+  if (apiKey) {
+    headers['x-cg-demo-api-key'] = apiKey;
+  }
 
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(url, { headers });
-      if (res.status === 429) { await delay(2000 * (i + 1)); continue; }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      
+      // Handle Rate Limiting
+      if (res.status === 429) { 
+        console.warn('Rate limit hit, retrying...');
+        await delay(2000 * (i + 1)); 
+        continue; 
+      }
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${res.status}`);
+      }
+      
       return await res.json();
     } catch (e) {
       if (i === retries - 1) throw e;

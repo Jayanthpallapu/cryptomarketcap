@@ -16,6 +16,7 @@ const TABS = [
 export default function CoinTable() {
   const [coins, setCoins] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [page, setPage] = useState(1)
   const [perPage] = useState(100)
   const [activeTab, setActiveTab] = useState('all')
@@ -28,9 +29,21 @@ export default function CoinTable() {
   useEffect(() => {
     const fetchData = () => {
       setLoading(true)
+      setError(null)
       getCoins(page, perPage)
-        .then(data => { setCoins(data || []); setLoading(false) })
-        .catch(() => setLoading(false))
+        .then(data => { 
+          if (data && Array.isArray(data)) {
+            setCoins(data)
+          } else {
+            setError('Failed to fetch coins. Please check your API key or try again later.')
+          }
+          setLoading(false) 
+        })
+        .catch((err) => {
+          console.error(err)
+          setError(err.message || 'An error occurred while fetching data.')
+          setLoading(false)
+        })
     }
 
     fetchData()
@@ -105,7 +118,16 @@ export default function CoinTable() {
       </div>
 
       <div className="crypto-table-wrapper">
-        {loading ? (
+        {error ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
+            <h3 style={{ marginBottom: 12 }}>Unable to load data</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 24, maxWidth: 400, margin: '0 auto 24px' }}>
+              {error.includes('429') ? 'Rate limit exceeded. CoinGecko allows limited calls on the free plan. Please wait a minute and try again.' : error}
+            </p>
+            <button className="btn btn-primary" onClick={() => window.location.reload()}>Retry Now</button>
+          </div>
+        ) : loading ? (
           <div>{Array.from({length:20}).map((_,i) => (
             <div key={i} className="skeleton-row">
               <div className="loading-skeleton skeleton-text w-60" style={{height:14}}></div>
