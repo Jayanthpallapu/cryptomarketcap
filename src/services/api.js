@@ -1,4 +1,7 @@
-const BASE = '/api/coingecko';
+// In development, Vite proxies /api/coingecko → https://api.coingecko.com/api/v3
+// In production, we call the CoinGecko API directly
+const isDev = import.meta.env.DEV;
+const BASE = isDev ? '/api/coingecko' : 'https://api.coingecko.com/api/v3';
 
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
