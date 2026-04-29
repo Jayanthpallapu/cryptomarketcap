@@ -1,13 +1,11 @@
-// Using a relative path for both Dev and Production.
-// In Dev: Vite handles the proxy (vite.config.js)
-// In Production: Vercel handles the proxy (vercel.json)
+// All API calls go through /api/coingecko
+// In Development: Vite dev server proxy (vite.config.js)
+// In Production: Vercel Serverless Function (api/coingecko/[...path].js)
 const BASE = '/api/coingecko';
 
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
 // ─── In-Memory Cache ────────────────────────────────────────────────
-// Prevents redundant API calls when navigating between pages.
-// Each cache entry expires after its TTL (time-to-live).
 const cache = new Map();
 
 function getCached(key, ttlMs) {
@@ -22,47 +20,38 @@ function setCache(key, data) {
   cache.set(key, { data, timestamp: Date.now() });
 }
 
-// Cache TTLs (in milliseconds)
 const CACHE_TTL = {
-  global: 2 * 60 * 1000,       // 2 minutes
-  coins: 3 * 60 * 1000,        // 3 minutes
-  trending: 5 * 60 * 1000,     // 5 minutes
-  coinDetail: 2 * 60 * 1000,   // 2 minutes
-  chart: 3 * 60 * 1000,        // 3 minutes
-  search: 60 * 1000,           // 1 minute
-  exchanges: 5 * 60 * 1000,    // 5 minutes
+  global: 3 * 60 * 1000,
+  coins: 3 * 60 * 1000,
+  trending: 5 * 60 * 1000,
+  coinDetail: 3 * 60 * 1000,
+  chart: 5 * 60 * 1000,
+  search: 2 * 60 * 1000,
+  exchanges: 5 * 60 * 1000,
 };
 
 // ─── Fetch with Retry ───────────────────────────────────────────────
 async function fetchWithRetry(url, retries = 3) {
-  const apiKey = import.meta.env.VITE_CG_API_KEY;
-  const headers = { 'Accept': 'application/json' };
-
-  // CoinGecko Demo API uses x-cg-demo-api-key header
-  if (apiKey) {
-    headers['x-cg-demo-api-key'] = apiKey;
-  }
-
   for (let i = 0; i < retries; i++) {
     try {
-      const res = await fetch(url, { headers });
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json' }
+      });
 
-      // Handle Rate Limiting
       if (res.status === 429) {
-        console.warn('Rate limit hit, retrying...');
+        console.warn(`Rate limit hit (attempt ${i + 1}), waiting...`);
         await delay(3000 * (i + 1));
         continue;
       }
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${res.status}`);
+        throw new Error(`HTTP ${res.status}`);
       }
 
       return await res.json();
     } catch (e) {
       if (i === retries - 1) throw e;
-      await delay(1500 * (i + 1));
+      await delay(2000 * (i + 1));
     }
   }
   throw new Error('Failed to fetch after multiple retries');
