@@ -6,6 +6,19 @@ export default defineConfig(({ mode }) => {
   return {
     base: './',
     plugins: [react()],
+    build: {
+      minify: 'esbuild',
+      cssMinify: true,
+      sourcemap: false,
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom', 'chart.js', 'react-chartjs-2']
+          }
+        }
+      }
+    },
     server: {
       port: 3000,
       open: true,
