@@ -82,7 +82,7 @@ export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc
     
     // Inject Starlink as requested
     const starlink = {
-      id: 'starlink-custom',
+      id: 'starlink', // Changed to real ID so detail page works
       symbol: 'starl',
       name: 'Starlink',
       image: 'https://assets.coingecko.com/coins/images/16146/large/starl.png',
