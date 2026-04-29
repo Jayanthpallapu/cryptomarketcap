@@ -27,27 +27,34 @@ export default function CoinTable() {
   })
 
   useEffect(() => {
-    const fetchData = () => {
-      setLoading(true)
+    const fetchData = (isBackground = false) => {
+      // Only show loading skeleton on first load, not background refreshes
+      if (!isBackground) {
+        setLoading(true)
+      }
       setError(null)
       getCoins(page, perPage)
         .then(data => { 
           if (data && Array.isArray(data)) {
             setCoins(data)
-          } else {
+          } else if (coins.length === 0) {
+            // Only show error if we have no data at all
             setError('Failed to fetch coins. Please check your API key or try again later.')
           }
           setLoading(false) 
         })
         .catch((err) => {
           console.error(err)
-          setError(err.message || 'An error occurred while fetching data.')
+          // Only show error if we have no cached data to display
+          if (coins.length === 0) {
+            setError(err.message || 'An error occurred while fetching data.')
+          }
           setLoading(false)
         })
     }
 
-    fetchData()
-    const interval = setInterval(fetchData, 300000) // Refresh every 5 minutes
+    fetchData(false)
+    const interval = setInterval(() => fetchData(true), 300000) // Background refresh every 5 minutes
     return () => clearInterval(interval)
   }, [page, perPage])
 
