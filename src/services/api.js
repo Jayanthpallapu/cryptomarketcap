@@ -90,9 +90,9 @@ export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc
         current_price: 0.0009672,
         market_cap: 967200000,
         market_cap_rank: 1,
-        price_change_percentage_24h: 46700,
-        price_change_percentage_1h_in_currency: 46700,
-        price_change_percentage_7d_in_currency: 46700,
+        price_change_percentage_24h: 93400,
+        price_change_percentage_1h_in_currency: 93400,
+        price_change_percentage_7d_in_currency: 93400,
         total_volume: 200000000,
         circulating_supply: 1000000000,
         max_supply: 1000000000,
@@ -122,9 +122,9 @@ export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc
         current_price: 0.007526,
         market_cap: 752600000,
         market_cap_rank: 3,
-        price_change_percentage_24h: 33000,
-        price_change_percentage_1h_in_currency: 33000,
-        price_change_percentage_7d_in_currency: 33000,
+        price_change_percentage_24h: 66000,
+        price_change_percentage_1h_in_currency: 66000,
+        price_change_percentage_7d_in_currency: 66000,
         total_volume: 150000000,
         circulating_supply: 1000000000,
         max_supply: 1000000000,
@@ -138,9 +138,9 @@ export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc
         current_price: 0.005521,
         market_cap: 552100000,
         market_cap_rank: 4,
-        price_change_percentage_24h: 26400,
-        price_change_percentage_1h_in_currency: 26400,
-        price_change_percentage_7d_in_currency: 26400,
+        price_change_percentage_24h: 52800,
+        price_change_percentage_1h_in_currency: 52800,
+        price_change_percentage_7d_in_currency: 52800,
         total_volume: 120000000,
         circulating_supply: 1000000000,
         max_supply: 1000000000,
@@ -167,7 +167,7 @@ export async function getTrending() {
           thumb: '/coins/baby_elonx.png',
           large: '/coins/baby_elonx.png',
           data: {
-            price_change_percentage_24h: { usd: 46700 },
+            price_change_percentage_24h: { usd: 93400 },
             price: '$0.0009672'
           }
         }
@@ -195,7 +195,7 @@ export async function getTrending() {
           thumb: '/coins/tesla_x.png',
           large: '/coins/tesla_x.png',
           data: {
-            price_change_percentage_24h: { usd: 33000 },
+            price_change_percentage_24h: { usd: 66000 },
             price: '$0.007526'
           }
         }
@@ -209,7 +209,7 @@ export async function getTrending() {
           thumb: '/coins/spacex_meme.png',
           large: '/coins/spacex_meme.png',
           data: {
-            price_change_percentage_24h: { usd: 26400 },
+            price_change_percentage_24h: { usd: 52800 },
             price: '$0.005521'
           }
         }
