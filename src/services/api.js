@@ -23,8 +23,8 @@ const ONE_HOUR = 60 * 60 * 1000;
 
 const CACHE_TTL = {
   global: ONE_HOUR,
-  coins: ONE_HOUR,
-  trending: ONE_HOUR,
+  coins: 5 * 60 * 1000,
+  trending: 5 * 60 * 1000,
   coinDetail: ONE_HOUR,
   chart: ONE_HOUR,
   search: 5 * 60 * 1000,
