@@ -103,15 +103,15 @@ export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc
         symbol: 'starl',
         name: 'Starlink',
         image: 'https://coin-images.coingecko.com/coins/images/22049/large/starlink.png',
-        current_price: 0.00000123,
-        market_cap: 123000000,
+        current_price: 0.5986,
+        market_cap: 598600000,
         market_cap_rank: 2,
-        price_change_percentage_24h: 1000,
-        price_change_percentage_1h_in_currency: 100,
-        price_change_percentage_7d_in_currency: 1000,
+        price_change_percentage_24h: 526000,
+        price_change_percentage_1h_in_currency: 22,
+        price_change_percentage_7d_in_currency: 526,
         total_volume: 50000000,
-        circulating_supply: 100000000000,
-        max_supply: 100000000000,
+        circulating_supply: 1000000000,
+        max_supply: 1000000000,
         sparkline_in_7d: { price: Array.from({length: 100}, () => Math.random() * 10 + 5) }
       },
       {
@@ -181,8 +181,8 @@ export async function getTrending() {
           thumb: 'https://coin-images.coingecko.com/coins/images/22049/thumb/starlink.png',
           large: 'https://coin-images.coingecko.com/coins/images/22049/large/starlink.png',
           data: {
-            price_change_percentage_24h: { usd: 1000 },
-            price: '$0.00000123'
+            price_change_percentage_24h: { usd: 526000 },
+            price: '$0.5986'
           }
         }
       },
