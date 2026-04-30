@@ -18,7 +18,12 @@ export function formatNumber(num, decimals = 0) {
 
 export function formatPercent(num) {
   if (num == null || isNaN(num)) return '0.00%';
-  return Math.abs(num).toFixed(2) + '%';
+  const absNum = Math.abs(num);
+  if (absNum >= 1000) {
+    const val = num / 1000;
+    return (val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)) + 'k%';
+  }
+  return absNum.toFixed(2) + '%';
 }
 
 export function getChangeClass(num) {

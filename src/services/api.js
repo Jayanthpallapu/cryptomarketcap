@@ -80,25 +80,75 @@ export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc
       `${BASE}/coins/markets?vs_currency=usd&order=${order}&per_page=${perPage}&page=${page}&sparkline=true&price_change_percentage=1h,24h,7d`
     );
     
-    // Inject Starlink as requested
-    const starlink = {
-      id: 'starlink-2', // Updated to the specific version provided by user
-      symbol: 'starl',
-      name: 'Starlink',
-      image: 'https://coin-images.coingecko.com/coins/images/22049/large/starlink.png', // The red circle logo
-      current_price: 0.00000123,
-      market_cap: 123000000,
-      market_cap_rank: 1,
-      price_change_percentage_24h: 1000,
-      price_change_percentage_1h_in_currency: 100,
-      price_change_percentage_7d_in_currency: 1000,
-      total_volume: 50000000,
-      circulating_supply: 100000000000,
-      max_supply: 100000000000,
-      sparkline_in_7d: { price: Array.from({length: 100}, () => Math.random() * 10 + 5) }
-    };
+    // Inject custom coins as requested
+    const customCoins = [
+      {
+        id: 'baby-elonx',
+        symbol: 'elonx',
+        name: 'Baby ElonX',
+        image: '/coins/baby_elonx.png',
+        current_price: 0.0009672,
+        market_cap: 967200000,
+        market_cap_rank: 1,
+        price_change_percentage_24h: 46700,
+        price_change_percentage_1h_in_currency: 800,
+        price_change_percentage_7d_in_currency: 80000,
+        total_volume: 200000000,
+        circulating_supply: 1000000000,
+        max_supply: 1000000000,
+        sparkline_in_7d: { price: Array.from({length: 100}, () => Math.random() * 20 + 15) }
+      },
+      {
+        id: 'starlink-2',
+        symbol: 'starl',
+        name: 'Starlink',
+        image: 'https://coin-images.coingecko.com/coins/images/22049/large/starlink.png',
+        current_price: 0.00000123,
+        market_cap: 123000000,
+        market_cap_rank: 2,
+        price_change_percentage_24h: 1000,
+        price_change_percentage_1h_in_currency: 100,
+        price_change_percentage_7d_in_currency: 1000,
+        total_volume: 50000000,
+        circulating_supply: 100000000000,
+        max_supply: 100000000000,
+        sparkline_in_7d: { price: Array.from({length: 100}, () => Math.random() * 10 + 5) }
+      },
+      {
+        id: 'tesla-x',
+        symbol: 'teslax',
+        name: 'Tesla X',
+        image: '/coins/tesla_x.png',
+        current_price: 0.007526,
+        market_cap: 752600000,
+        market_cap_rank: 3,
+        price_change_percentage_24h: 33000,
+        price_change_percentage_1h_in_currency: 500,
+        price_change_percentage_7d_in_currency: 50000,
+        total_volume: 150000000,
+        circulating_supply: 1000000000,
+        max_supply: 1000000000,
+        sparkline_in_7d: { price: Array.from({length: 100}, () => Math.random() * 15 + 10) }
+      },
+      {
+        id: 'space-x-meme',
+        symbol: 'spacex',
+        name: 'Space X meme',
+        image: '/coins/spacex_meme.png',
+        current_price: 0.005521,
+        market_cap: 552100000,
+        market_cap_rank: 4,
+        price_change_percentage_24h: 26400,
+        price_change_percentage_1h_in_currency: 400,
+        price_change_percentage_7d_in_currency: 40000,
+        total_volume: 120000000,
+        circulating_supply: 1000000000,
+        max_supply: 1000000000,
+        sparkline_in_7d: { price: Array.from({length: 100}, () => Math.random() * 12 + 8) }
+      }
+    ];
     
-    return [starlink, ...data];
+    return [...customCoins, ...data];
   });
 }
 
@@ -107,22 +157,66 @@ export async function getTrending() {
     const data = await fetchWithRetry(`${BASE}/search/trending`);
     const coins = data.coins || [];
     
-    const starlink = {
-      item: {
-        id: 'starlink-2',
-        name: 'Starlink',
-        symbol: 'STARL',
-        market_cap_rank: 1,
-        thumb: 'https://coin-images.coingecko.com/coins/images/22049/thumb/starlink.png',
-        large: 'https://coin-images.coingecko.com/coins/images/22049/large/starlink.png',
-        data: {
-          price_change_percentage_24h: { usd: 1000 },
-          price: '$0.00000123'
+    const customTrending = [
+      {
+        item: {
+          id: 'baby-elonx',
+          name: 'Baby ElonX',
+          symbol: 'ELONX',
+          market_cap_rank: 1,
+          thumb: '/coins/baby_elonx.png',
+          large: '/coins/baby_elonx.png',
+          data: {
+            price_change_percentage_24h: { usd: 46700 },
+            price: '$0.0009672'
+          }
+        }
+      },
+      {
+        item: {
+          id: 'starlink-2',
+          name: 'Starlink',
+          symbol: 'STARL',
+          market_cap_rank: 2,
+          thumb: 'https://coin-images.coingecko.com/coins/images/22049/thumb/starlink.png',
+          large: 'https://coin-images.coingecko.com/coins/images/22049/large/starlink.png',
+          data: {
+            price_change_percentage_24h: { usd: 1000 },
+            price: '$0.00000123'
+          }
+        }
+      },
+      {
+        item: {
+          id: 'tesla-x',
+          name: 'Tesla X',
+          symbol: 'TESLAX',
+          market_cap_rank: 3,
+          thumb: '/coins/tesla_x.png',
+          large: '/coins/tesla_x.png',
+          data: {
+            price_change_percentage_24h: { usd: 33000 },
+            price: '$0.007526'
+          }
+        }
+      },
+      {
+        item: {
+          id: 'space-x-meme',
+          name: 'Space X meme',
+          symbol: 'SPACEX',
+          market_cap_rank: 4,
+          thumb: '/coins/spacex_meme.png',
+          large: '/coins/spacex_meme.png',
+          data: {
+            price_change_percentage_24h: { usd: 26400 },
+            price: '$0.005521'
+          }
         }
       }
-    };
+    ];
     
-    return [starlink, ...coins];
+    return [...customTrending, ...coins];
   });
 }
 
