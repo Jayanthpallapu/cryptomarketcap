@@ -107,7 +107,7 @@ export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc
         market_cap: 598600000,
         market_cap_rank: 2,
         price_change_percentage_24h: 526000,
-        price_change_percentage_1h_in_currency: 22,
+        price_change_percentage_1h_in_currency: 212,
         price_change_percentage_7d_in_currency: 526000,
         total_volume: 50000000,
         circulating_supply: 1000000000,
