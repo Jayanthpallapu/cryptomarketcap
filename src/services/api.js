@@ -87,8 +87,8 @@ export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc
         symbol: 'elonx',
         name: 'Baby ElonX',
         image: '/coins/baby_elonx.png',
-        current_price: 0.0009672,
-        market_cap: 967200000,
+        current_price: 0.009932,
+        market_cap: 993200000,
         market_cap_rank: 1,
         price_change_percentage_24h: 113400,
         price_change_percentage_1h_in_currency: 113400,
@@ -119,8 +119,8 @@ export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc
         symbol: 'teslax',
         name: 'Tesla X',
         image: '/coins/tesla_x.png',
-        current_price: 0.007526,
-        market_cap: 752600000,
+        current_price: 0.02165,
+        market_cap: 2165000000,
         market_cap_rank: 3,
         price_change_percentage_24h: 86000,
         price_change_percentage_1h_in_currency: 86000,
@@ -135,8 +135,8 @@ export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc
         symbol: 'spacex',
         name: 'Space X meme',
         image: '/coins/spacex_meme.png',
-        current_price: 0.005521,
-        market_cap: 552100000,
+        current_price: 0.01688,
+        market_cap: 1688000000,
         market_cap_rank: 4,
         price_change_percentage_24h: 72800,
         price_change_percentage_1h_in_currency: 72800,
@@ -168,7 +168,7 @@ export async function getTrending() {
           large: '/coins/baby_elonx.png',
           data: {
             price_change_percentage_24h: { usd: 113400 },
-            price: '$0.0009672'
+            price: '$0.009932'
           }
         }
       },
@@ -196,7 +196,7 @@ export async function getTrending() {
           large: '/coins/tesla_x.png',
           data: {
             price_change_percentage_24h: { usd: 86000 },
-            price: '$0.007526'
+            price: '$0.02165'
           }
         }
       },
@@ -210,7 +210,7 @@ export async function getTrending() {
           large: '/coins/spacex_meme.png',
           data: {
             price_change_percentage_24h: { usd: 72800 },
-            price: '$0.005521'
+            price: '$0.01688'
           }
         }
       }
