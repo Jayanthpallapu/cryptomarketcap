@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://www.cryptomarketcap.co.in/sitemap.xml
