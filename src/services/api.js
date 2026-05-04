@@ -77,7 +77,9 @@ const CUSTOM_COINS = [
     market_cap: 15200450,
     market_cap_rank: 1,
     total_volume: 8450000,
-    price_change_percentage_1h_in_currency: 3.66,
+    get price_change_percentage_1h_in_currency() {
+      return Number((Math.random() * 0.3).toFixed(2));
+    },
     price_change_percentage_24h: 6.12,
     price_change_percentage_7d_in_currency: 11.58,
     circulating_supply: 2828000000,
@@ -147,19 +149,20 @@ export async function getTrending() {
 export async function getCoinDetail(id) {
   const custom = CUSTOM_COINS.find(c => c.id === id);
   if (custom) {
+    const coin = { ...custom }; // Capture values once
     return {
-      ...custom,
+      ...coin,
       description: { en: 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' },
       market_data: {
-        current_price: { usd: custom.current_price },
-        market_cap: { usd: custom.market_cap },
-        total_volume: { usd: custom.total_volume },
-        price_change_percentage_1h_in_currency: { usd: custom.price_change_percentage_1h_in_currency },
-        price_change_percentage_24h: custom.price_change_percentage_24h,
-        price_change_percentage_7d: custom.price_change_percentage_7d_in_currency,
-        circulating_supply: custom.circulating_supply,
-        max_supply: custom.max_supply,
-        sparkline_7d: custom.sparkline_in_7d
+        current_price: { usd: coin.current_price },
+        market_cap: { usd: coin.market_cap },
+        total_volume: { usd: coin.total_volume },
+        price_change_percentage_1h_in_currency: { usd: coin.price_change_percentage_1h_in_currency },
+        price_change_percentage_24h: coin.price_change_percentage_24h,
+        price_change_percentage_7d: coin.price_change_percentage_7d_in_currency,
+        circulating_supply: coin.circulating_supply,
+        max_supply: coin.max_supply,
+        sparkline_7d: coin.sparkline_in_7d
       }
     };
   }
