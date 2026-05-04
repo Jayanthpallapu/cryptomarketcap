@@ -78,13 +78,10 @@ const CUSTOM_COINS = [
     market_cap_rank: 1,
     total_volume: 8450000,
     get price_change_percentage_1h_in_currency() {
-      const startTime = new Date('2026-05-04T17:29:00+05:30').getTime();
-      const elapsedHours = Math.floor((Date.now() - startTime) / (3600 * 1000));
-      const cappedHours = Math.min(Math.max(elapsedHours, 0), 10);
-      return 25 + (cappedHours * 25);
+      return Math.random() * 0.2;
     },
-    price_change_percentage_24h: 6.12,
-    price_change_percentage_7d_in_currency: 11.58,
+    price_change_percentage_24h: 100,
+    price_change_percentage_7d_in_currency: 100,
     circulating_supply: 2828000000,
     max_supply: 10000000000,
     sparkline_in_7d: {
