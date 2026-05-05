@@ -67,26 +67,25 @@ async function cachedFetch(cacheKey, ttl, fetchFn) {
 
 // ─── API Functions ──────────────────────────────────────────────────
 // ─── API Functions ──────────────────────────────────────────────────
-const MUSK_START_PRICE = 0.005374;
-const MUSK_START_TIME = 1746316800000; // May 4, 2026 00:00:00 UTC
+const MUSK_START_PRICE = 0.005736;
+const MUSK_START_TIME = Date.now();
 
 function getMuskMetrics() {
   const now = Date.now();
-  const hoursPassed = Math.max(0, (now - MUSK_START_TIME) / (1000 * 60 * 60));
   
   // Deterministic random for consistent metrics within a 10s window
   const seed = Math.floor(now / 10000);
   const rand = ((seed * 9301 + 49297) % 233280) / 233280;
-  const current1h = 0.8 + (rand * 0.25);
   
-  const cumulativeGrowth = hoursPassed * 0.925; // 0.925% average per hour
-  const totalGrowthPercent = cumulativeGrowth + current1h;
+  // Base values from user request
+  const base1h = 22;
+  const current1h = base1h + (rand * 0.2); // Slight fluctuation around 22%
   
   return {
-    price: MUSK_START_PRICE * (1 + totalGrowthPercent / 100),
+    price: MUSK_START_PRICE,
     change1h: current1h,
-    change24: 100 + totalGrowthPercent,
-    change7d: 100 + totalGrowthPercent
+    change24: 125,
+    change7d: 125
   };
 }
 
