@@ -67,21 +67,50 @@ async function cachedFetch(cacheKey, ttl, fetchFn) {
 
 // ─── API Functions ──────────────────────────────────────────────────
 // ─── API Functions ──────────────────────────────────────────────────
+const MUSK_START_PRICE = 0.005374;
+const MUSK_START_TIME = 1746316800000; // May 4, 2026 00:00:00 UTC
+
+function getMuskMetrics() {
+  const now = Date.now();
+  const hoursPassed = Math.max(0, (now - MUSK_START_TIME) / (1000 * 60 * 60));
+  
+  // Deterministic random for consistent metrics within a 10s window
+  const seed = Math.floor(now / 10000);
+  const rand = ((seed * 9301 + 49297) % 233280) / 233280;
+  const current1h = 0.8 + (rand * 0.25);
+  
+  const cumulativeGrowth = hoursPassed * 0.925; // 0.925% average per hour
+  const totalGrowthPercent = cumulativeGrowth + current1h;
+  
+  return {
+    price: MUSK_START_PRICE * (1 + totalGrowthPercent / 100),
+    change1h: current1h,
+    change24: 100 + totalGrowthPercent,
+    change7d: 100 + totalGrowthPercent
+  };
+}
+
 const CUSTOM_COINS = [
   {
     id: 'musk-meme',
     symbol: 'muskmeme',
     name: 'Musk meme',
     image: '/musk-meme.png',
-    current_price: 0.005374,
+    get current_price() {
+      return getMuskMetrics().price;
+    },
     market_cap: 15200450,
     market_cap_rank: 1,
     total_volume: 8450000,
     get price_change_percentage_1h_in_currency() {
-      return Math.random() * 0.2;
+      return getMuskMetrics().change1h;
     },
-    price_change_percentage_24h: 100,
-    price_change_percentage_7d_in_currency: 100,
+    get price_change_percentage_24h() {
+      return getMuskMetrics().change24;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getMuskMetrics().change7d;
+    },
     circulating_supply: 2828000000,
     max_supply: 10000000000,
     sparkline_in_7d: {
