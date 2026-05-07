@@ -77,9 +77,8 @@ function getMuskMetrics() {
   const seed = Math.floor(now / 10000);
   const rand = ((seed * 9301 + 49297) % 233280) / 233280;
   
-  // Base values from user request
-  const base1h = 22;
-  const current1h = base1h + (rand * 0.2); // Slight fluctuation around 22%
+  // Base values from user request (0.16% to 0.78%)
+  const current1h = 0.16 + (rand * (0.78 - 0.16)); 
   
   return {
     price: MUSK_START_PRICE,
