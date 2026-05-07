@@ -70,6 +70,10 @@ async function cachedFetch(cacheKey, ttl, fetchFn) {
 const MUSK_START_PRICE = 0.005736;
 const MUSK_START_TIME = Date.now();
 
+// Star Coin constants
+const STAR_START_PRICE = 10.3446;
+const STAR_START_TIME = Date.now();
+
 function getMuskMetrics() {
   const now = Date.now();
   
@@ -90,18 +94,24 @@ function getMuskMetrics() {
 
 function getStarMetrics() {
   const now = Date.now();
+  const elapsed = now - STAR_START_TIME;
   const seed = Math.floor(now / 10000);
   const rand = ((seed * 9301 + 49297) % 233280) / 233280;
   // Use a different seed offset for 1h to get independent randomness
   const rand2 = ((seed * 6271 + 13337) % 233280) / 233280;
   
-  // 1hr: 1% to 3% fluctuation
-  const change1h = parseFloat((1 + (rand2 * 2)).toFixed(2));
-  // 24h & 7d: 1100% to 1200% fluctuation
+  // 1hr change: first 2 hours fixed at 3%, then random 0.16%–0.98%
+  let change1h;
+  if (elapsed < 2 * 60 * 60 * 1000) {
+    change1h = 3.00;
+  } else {
+    change1h = parseFloat((0.16 + (rand2 * (0.98 - 0.16))).toFixed(2));
+  }
+  // 24h & 7d: 1100% to 1200% fluctuation (unchanged)
   const changeLong = 1100 + (rand * 100);
   
   return {
-    price: 10.12,
+    price: STAR_START_PRICE,
     change1h: change1h,
     changeLong: changeLong
   };
