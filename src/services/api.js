@@ -71,8 +71,9 @@ const MUSK_START_PRICE = 0.005736;
 const MUSK_START_TIME = Date.now();
 
 // Star Coin constants
-const STAR_START_PRICE = 10.3446;
+const STAR_START_PRICE = 10.9653; // increased by 6%
 const STAR_START_TIME = Date.now();
+
 
 function getMuskMetrics() {
   const now = Date.now();
@@ -94,26 +95,39 @@ function getMuskMetrics() {
 
 function getStarMetrics() {
   const now = Date.now();
-  const elapsed = now - STAR_START_TIME;
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  // Helper to compute 1h change for a given timestamp
+  const computeHourChange = (timestamp) => {
+    const seed = Math.floor(timestamp / 10000);
+    const rand2 = ((seed * 6271 + 13337) % 233280) / 233280;
+    const elapsedSinceStart = timestamp - STAR_START_TIME;
+    if (elapsedSinceStart < 2 * ONE_HOUR_MS) {
+      return 3.00;
+    }
+    return parseFloat((0.16 + (rand2 * (0.98 - 0.16))).toFixed(2));
+  };
+
+  // Calculate cumulative price based on past full hours
+  let price = STAR_START_PRICE;
+  for (let t = STAR_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t);
+    price *= (1 + change / 100);
+  }
+  price = parseFloat(price.toFixed(4));
+
+  // Current hour's change
+  const change1h = computeHourChange(now);
+
+  // 24h and 7d change (unchanged logic)
   const seed = Math.floor(now / 10000);
   const rand = ((seed * 9301 + 49297) % 233280) / 233280;
-  // Use a different seed offset for 1h to get independent randomness
-  const rand2 = ((seed * 6271 + 13337) % 233280) / 233280;
-  
-  // 1hr change: first 2 hours fixed at 3%, then random 0.16%–0.98%
-  let change1h;
-  if (elapsed < 2 * 60 * 60 * 1000) {
-    change1h = 3.00;
-  } else {
-    change1h = parseFloat((0.16 + (rand2 * (0.98 - 0.16))).toFixed(2));
-  }
-  // 24h & 7d: 1100% to 1200% fluctuation (unchanged)
   const changeLong = 1100 + (rand * 100);
-  
+
   return {
-    price: STAR_START_PRICE,
-    change1h: change1h,
-    changeLong: changeLong
+    price,
+    change1h,
+    changeLong
   };
 }
 
