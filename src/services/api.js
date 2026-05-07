@@ -96,7 +96,7 @@ function getStarMetrics() {
   const rand2 = ((seed * 6271 + 13337) % 233280) / 233280;
   
   // 1hr: 1% to 3% fluctuation
-  const change1h = 1 + (rand2 * 2);
+  const change1h = parseFloat((1 + (rand2 * 2)).toFixed(2));
   // 24h & 7d: 1100% to 1200% fluctuation
   const changeLong = 1100 + (rand * 100);
   
