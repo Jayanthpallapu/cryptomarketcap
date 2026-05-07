@@ -88,6 +88,20 @@ function getMuskMetrics() {
   };
 }
 
+function getStarMetrics() {
+  const now = Date.now();
+  const seed = Math.floor(now / 10000);
+  const rand = ((seed * 9301 + 49297) % 233280) / 233280;
+  
+  // 1100% to 1200% fluctuation
+  const fluctuation = 1100 + (rand * 100);
+  
+  return {
+    price: 10.12,
+    change: fluctuation
+  };
+}
+
 const CUSTOM_COINS = [
   {
     id: 'musk-meme',
@@ -120,17 +134,25 @@ const CUSTOM_COINS = [
     symbol: 'star',
     name: 'Star Coin',
     image: '/star-coin.png',
-    current_price: 1.16,
+    get current_price() {
+      return getStarMetrics().price;
+    },
     market_cap: 8540000,
     market_cap_rank: 2,
     total_volume: 1200000,
-    price_change_percentage_1h_in_currency: 8,
-    price_change_percentage_24h: 11,
-    price_change_percentage_7d_in_currency: 34,
+    get price_change_percentage_1h_in_currency() {
+      return getStarMetrics().change;
+    },
+    get price_change_percentage_24h() {
+      return getStarMetrics().change;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getStarMetrics().change;
+    },
     circulating_supply: 7360000,
     max_supply: 20000000,
     sparkline_in_7d: {
-      price: [1.05, 1.08, 1.10, 1.12, 1.14, 1.15, 1.16]
+      price: [9.5, 9.8, 10.0, 10.1, 10.12, 10.12, 10.12]
     }
   }
 ];
