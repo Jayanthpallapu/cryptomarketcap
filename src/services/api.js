@@ -92,13 +92,18 @@ function getStarMetrics() {
   const now = Date.now();
   const seed = Math.floor(now / 10000);
   const rand = ((seed * 9301 + 49297) % 233280) / 233280;
+  // Use a different seed offset for 1h to get independent randomness
+  const rand2 = ((seed * 6271 + 13337) % 233280) / 233280;
   
-  // 1100% to 1200% fluctuation
-  const fluctuation = 1100 + (rand * 100);
+  // 1hr: 1% to 3% fluctuation
+  const change1h = 1 + (rand2 * 2);
+  // 24h & 7d: 1100% to 1200% fluctuation
+  const changeLong = 1100 + (rand * 100);
   
   return {
     price: 10.12,
-    change: fluctuation
+    change1h: change1h,
+    changeLong: changeLong
   };
 }
 
@@ -141,13 +146,13 @@ const CUSTOM_COINS = [
     market_cap_rank: 2,
     total_volume: 1200000,
     get price_change_percentage_1h_in_currency() {
-      return getStarMetrics().change;
+      return getStarMetrics().change1h;
     },
     get price_change_percentage_24h() {
-      return getStarMetrics().change;
+      return getStarMetrics().changeLong;
     },
     get price_change_percentage_7d_in_currency() {
-      return getStarMetrics().change;
+      return getStarMetrics().changeLong;
     },
     circulating_supply: 7360000,
     max_supply: 20000000,
