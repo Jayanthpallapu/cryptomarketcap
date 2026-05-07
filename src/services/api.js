@@ -115,6 +115,24 @@ const CUSTOM_COINS = [
     sparkline_in_7d: {
       price: [0.0048, 0.0049, 0.0051, 0.0050, 0.0052, 0.0053, 0.005374]
     }
+  },
+  {
+    id: 'star-coin',
+    symbol: 'star',
+    name: 'Star Coin',
+    image: '/star-coin.png',
+    current_price: 1.16,
+    market_cap: 8540000,
+    market_cap_rank: 2,
+    total_volume: 1200000,
+    price_change_percentage_1h_in_currency: 8,
+    price_change_percentage_24h: 11,
+    price_change_percentage_7d_in_currency: 34,
+    circulating_supply: 7360000,
+    max_supply: 20000000,
+    sparkline_in_7d: {
+      price: [1.05, 1.08, 1.10, 1.12, 1.14, 1.15, 1.16]
+    }
   }
 ];
 
@@ -180,7 +198,11 @@ export async function getCoinDetail(id) {
     const coin = { ...custom }; // Capture values once
     return {
       ...coin,
-      description: { en: 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' },
+      description: { 
+        en: coin.id === 'star-coin' 
+          ? 'Star Coin is a premium utility token powering the next generation of decentralized star-mapping and navigation services.' 
+          : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
+      },
       market_data: {
         current_price: { usd: coin.current_price },
         market_cap: { usd: coin.market_cap },
