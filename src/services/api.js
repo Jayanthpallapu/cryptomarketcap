@@ -67,31 +67,10 @@ async function cachedFetch(cacheKey, ttl, fetchFn) {
 
 // ─── API Functions ──────────────────────────────────────────────────
 // ─── API Functions ──────────────────────────────────────────────────
-const MUSK_START_PRICE = 0.005736;
-const MUSK_START_TIME = Date.now();
 
 // Star Coin constants
-const STAR_START_PRICE = 10.9653; // increased by 6%
+const STAR_START_PRICE = 12.26; // updated price per request
 const STAR_START_TIME = Date.now();
-
-
-function getMuskMetrics() {
-  const now = Date.now();
-  
-  // Deterministic random for consistent metrics within a 10s window
-  const seed = Math.floor(now / 10000);
-  const rand = ((seed * 9301 + 49297) % 233280) / 233280;
-  
-  // Base values from user request (0.16% to 0.78%)
-  const current1h = 0.16 + (rand * (0.78 - 0.16)); 
-  
-  return {
-    price: MUSK_START_PRICE,
-    change1h: current1h,
-    change24: 125,
-    change7d: 125
-  };
-}
 
 function getStarMetrics() {
   const now = Date.now();
@@ -99,13 +78,11 @@ function getStarMetrics() {
 
   // Helper to compute 1h change for a given timestamp
   const computeHourChange = (timestamp) => {
+    // Deterministic random for consistent 1h changes within a 10‑second window
     const seed = Math.floor(timestamp / 10000);
-    const rand2 = ((seed * 6271 + 13337) % 233280) / 233280;
-    const elapsedSinceStart = timestamp - STAR_START_TIME;
-    if (elapsedSinceStart < 2 * ONE_HOUR_MS) {
-      return 3.00;
-    }
-    return parseFloat((0.16 + (rand2 * (0.98 - 0.16))).toFixed(2));
+    const rand = ((seed * 6271 + 13337) % 233280) / 233280;
+    // 0.23% to 1.98% fluctuation
+    return parseFloat((0.23 + (rand * (1.98 - 0.23))).toFixed(2));
   };
 
   // Calculate cumulative price based on past full hours
@@ -120,9 +97,8 @@ function getStarMetrics() {
   const change1h = computeHourChange(now);
 
   // 24h and 7d change (unchanged logic)
-  const seed = Math.floor(now / 10000);
-  const rand = ((seed * 9301 + 49297) % 233280) / 233280;
-  const changeLong = 1100 + (rand * 100);
+  // Fixed 24h and 7d change at 1360%
+  const changeLong = 1360;
 
   return {
     price,
@@ -132,32 +108,7 @@ function getStarMetrics() {
 }
 
 const CUSTOM_COINS = [
-  {
-    id: 'musk-meme',
-    symbol: 'muskmeme',
-    name: 'Musk meme',
-    image: '/musk-meme.png',
-    get current_price() {
-      return getMuskMetrics().price;
-    },
-    market_cap: 15200450,
-    market_cap_rank: 1,
-    total_volume: 8450000,
-    get price_change_percentage_1h_in_currency() {
-      return getMuskMetrics().change1h;
-    },
-    get price_change_percentage_24h() {
-      return getMuskMetrics().change24;
-    },
-    get price_change_percentage_7d_in_currency() {
-      return getMuskMetrics().change7d;
-    },
-    circulating_supply: 2828000000,
-    max_supply: 10000000000,
-    sparkline_in_7d: {
-      price: [0.0048, 0.0049, 0.0051, 0.0050, 0.0052, 0.0053, 0.005374]
-    }
-  },
+
   {
     id: 'star-coin',
     symbol: 'star',
@@ -182,6 +133,24 @@ const CUSTOM_COINS = [
     max_supply: 20000000,
     sparkline_in_7d: {
       price: [9.5, 9.8, 10.0, 10.1, 10.12, 10.12, 10.12]
+    }
+  },
+  {
+    id: 'baseball-beer',
+    symbol: 'bbb',
+    name: 'Base ball Beer',
+    image: '/star-coin.png',
+    current_price: 0.72,
+    market_cap: 3200000,
+    market_cap_rank: 5,
+    total_volume: 850000,
+    price_change_percentage_1h_in_currency: 5,
+    price_change_percentage_24h: 16,
+    price_change_percentage_7d_in_currency: 19,
+    circulating_supply: 15000000,
+    max_supply: 50000000,
+    sparkline_in_7d: {
+      price: [0.60, 0.63, 0.65, 0.64, 0.66, 0.69, 0.72]
     }
   }
 ];
@@ -251,7 +220,9 @@ export async function getCoinDetail(id) {
       description: { 
         en: coin.id === 'star-coin' 
           ? 'Star Coin is a premium utility token powering the next generation of decentralized star-mapping and navigation services.' 
-          : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
+          : coin.id === 'baseball-beer'
+            ? 'Base ball Beer is a community-driven token celebrating baseball culture and craft beer communities.'
+            : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
       },
       market_data: {
         current_price: { usd: coin.current_price },
