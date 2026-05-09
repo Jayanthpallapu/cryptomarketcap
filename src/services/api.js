@@ -201,7 +201,7 @@ const CUSTOM_COINS = [
     name: 'Baby Trump',
     image: '/star-coin.png',
     get current_price() {
-      return 0.000015;
+      return 0.439;
     },
     market_cap: 1500000,
     market_cap_rank: 7,
