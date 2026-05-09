@@ -201,19 +201,19 @@ const CUSTOM_COINS = [
     name: 'Baby Trump',
     image: 'https://coin-images.coingecko.com/coins/images/38010/large/photo_2024-02-22_13.png',
     get current_price() {
-      return 7.36;
+      return 8.016;
     },
     market_cap: 1500000,
     market_cap_rank: 7,
     total_volume: 450000,
     get price_change_percentage_1h_in_currency() {
-      return 2320;
+      return 100;
     },
     get price_change_percentage_24h() {
-      return 2320;
+      return 2420;
     },
     get price_change_percentage_7d_in_currency() {
-      return 2320;
+      return 2420;
     },
     circulating_supply: 1000000000,
     max_supply: 1000000000,
