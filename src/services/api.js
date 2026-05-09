@@ -194,6 +194,32 @@ const CUSTOM_COINS = [
     sparkline_in_7d: {
       price: [0.60, 0.63, 0.65, 0.64, 0.66, 0.69, 0.72]
     }
+  },
+  {
+    id: 'baby-trump',
+    symbol: 'babytrump',
+    name: 'Baby Trump',
+    image: '/star-coin.png',
+    get current_price() {
+      return 0.000015;
+    },
+    market_cap: 1500000,
+    market_cap_rank: 7,
+    total_volume: 450000,
+    get price_change_percentage_1h_in_currency() {
+      return -0.5;
+    },
+    get price_change_percentage_24h() {
+      return -3.00;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return -13.76;
+    },
+    circulating_supply: 1000000000,
+    max_supply: 1000000000,
+    sparkline_in_7d: {
+      price: [0.000017, 0.000016, 0.000016, 0.000015, 0.000016, 0.000015, 0.000015]
+    }
   }
 ];
 
@@ -264,7 +290,9 @@ export async function getCoinDetail(id) {
           ? 'Star Coin is a premium utility token powering the next generation of decentralized star-mapping and navigation services.' 
           : coin.id === 'baseball-beer'
             ? 'Base ball Beer is a community-driven token celebrating baseball culture and craft beer communities.'
-            : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
+            : coin.id === 'baby-trump'
+              ? 'Baby Trump is a community-driven meme coin.'
+              : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
       },
       market_data: {
         current_price: { usd: coin.current_price },
