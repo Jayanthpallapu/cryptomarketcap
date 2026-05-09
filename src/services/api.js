@@ -147,7 +147,7 @@ const CUSTOM_COINS = [
     id: 'star-coin',
     symbol: 'star',
     name: 'Star Coin',
-    image: '/star-coin.png',
+    image: 'https://coin-images.coingecko.com/coins/images/20921/large/stc.png',
     get current_price() {
       return getStarMetrics().price;
     },
@@ -173,7 +173,7 @@ const CUSTOM_COINS = [
     id: 'baseball-beer',
     symbol: 'bbb',
     name: 'Base ball Beer',
-    image: '/star-coin.png',
+    image: 'https://coin-images.coingecko.com/coins/images/38123/large/beer_%281%29.jpg',
     get current_price() {
       return getBBBMetrics().price;
     },
@@ -199,7 +199,7 @@ const CUSTOM_COINS = [
     id: 'baby-trump',
     symbol: 'babytrump',
     name: 'Baby Trump',
-    image: '/star-coin.png',
+    image: 'https://coin-images.coingecko.com/coins/images/38010/large/photo_2024-02-22_13.png',
     get current_price() {
       return 7.36;
     },
