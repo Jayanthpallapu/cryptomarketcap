@@ -69,7 +69,7 @@ async function cachedFetch(cacheKey, ttl, fetchFn) {
 // ─── API Functions ──────────────────────────────────────────────────
 
 // Star Coin constants
-const STAR_START_PRICE = 12.26; // updated price per request
+const STAR_START_PRICE = 12.50; // updated price per request
 const STAR_START_TIME = Date.now();
 
 function getStarMetrics() {
@@ -78,11 +78,14 @@ function getStarMetrics() {
 
   // Helper to compute 1h change for a given timestamp
   const computeHourChange = (timestamp) => {
+    if (timestamp - STAR_START_TIME < ONE_HOUR_MS) {
+      return 2.16;
+    }
     // Deterministic random for consistent 1h changes within a 10‑second window
     const seed = Math.floor(timestamp / 10000);
     const rand = ((seed * 6271 + 13337) % 233280) / 233280;
-    // 0.23% to 1.98% fluctuation
-    return parseFloat((0.23 + (rand * (1.98 - 0.23))).toFixed(2));
+    // 0.85% to 1.73% fluctuation
+    return parseFloat((0.85 + (rand * (1.73 - 0.85))).toFixed(2));
   };
 
   // Calculate cumulative price based on past full hours
@@ -97,14 +100,45 @@ function getStarMetrics() {
   const change1h = computeHourChange(now);
 
   // 24h and 7d change (unchanged logic)
-  // Fixed 24h and 7d change at 1360%
-  const changeLong = 1360;
+  // Fixed 24h and 7d change at 1400%
+  const changeLong = 1400;
 
   return {
     price,
     change1h,
     changeLong
   };
+}
+
+// Base ball beer constants
+const BBB_START_PRICE = 0.77;
+const BBB_START_TIME = Date.now();
+
+function getBBBMetrics() {
+  const now = Date.now();
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (timestamp) => {
+    if (timestamp - BBB_START_TIME < ONE_HOUR_MS) {
+      return 1.22;
+    }
+    const seed = Math.floor(timestamp / 10000);
+    const rand = ((seed * 7253 + 12345) % 233280) / 233280;
+    return parseFloat((0.23 + (rand * (0.76 - 0.23))).toFixed(2));
+  };
+
+  let price = BBB_START_PRICE;
+  for (let t = BBB_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t);
+    price *= (1 + change / 100);
+  }
+  price = parseFloat(price.toFixed(4));
+
+  const change1h = computeHourChange(now);
+  const change24h = 21;
+  const change7d = 24;
+
+  return { price, change1h, change24h, change7d };
 }
 
 const CUSTOM_COINS = [
@@ -140,13 +174,21 @@ const CUSTOM_COINS = [
     symbol: 'bbb',
     name: 'Base ball Beer',
     image: '/star-coin.png',
-    current_price: 0.72,
+    get current_price() {
+      return getBBBMetrics().price;
+    },
     market_cap: 3200000,
     market_cap_rank: 5,
     total_volume: 850000,
-    price_change_percentage_1h_in_currency: 5,
-    price_change_percentage_24h: 16,
-    price_change_percentage_7d_in_currency: 19,
+    get price_change_percentage_1h_in_currency() {
+      return getBBBMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getBBBMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getBBBMetrics().change7d;
+    },
     circulating_supply: 15000000,
     max_supply: 50000000,
     sparkline_in_7d: {
