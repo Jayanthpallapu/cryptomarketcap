@@ -201,19 +201,19 @@ const CUSTOM_COINS = [
     name: 'Baby Trump',
     image: '/star-coin.png',
     get current_price() {
-      return 0.439;
+      return 7.36;
     },
     market_cap: 1500000,
     market_cap_rank: 7,
     total_volume: 450000,
     get price_change_percentage_1h_in_currency() {
-      return -0.5;
+      return 2320;
     },
     get price_change_percentage_24h() {
-      return -3.00;
+      return 2320;
     },
     get price_change_percentage_7d_in_currency() {
-      return -13.76;
+      return 2320;
     },
     circulating_supply: 1000000000,
     max_supply: 1000000000,
