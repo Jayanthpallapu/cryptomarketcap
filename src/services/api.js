@@ -78,14 +78,11 @@ function getStarMetrics() {
 
   // Helper to compute 1h change for a given timestamp
   const computeHourChange = (timestamp) => {
-    if (timestamp - STAR_START_TIME < ONE_HOUR_MS) {
-      return 2.16;
-    }
     // Deterministic random for consistent 1h changes within a 10‑second window
     const seed = Math.floor(timestamp / 10000);
     const rand = ((seed * 6271 + 13337) % 233280) / 233280;
-    // 0.85% to 1.73% fluctuation
-    return parseFloat((0.85 + (rand * (1.73 - 0.85))).toFixed(2));
+    // 0.09% to 0.63% fluctuation
+    return parseFloat((0.09 + (rand * (0.63 - 0.09))).toFixed(2));
   };
 
   // Calculate cumulative price based on past full hours
@@ -94,14 +91,16 @@ function getStarMetrics() {
     const change = computeHourChange(t);
     price *= (1 + change / 100);
   }
-  price = parseFloat(price.toFixed(4));
 
   // Current hour's change
   const change1h = computeHourChange(now);
+  
+  // Add to price value
+  price *= (1 + change1h / 100);
+  price = parseFloat(price.toFixed(4));
 
-  // 24h and 7d change (unchanged logic)
-  // Fixed 24h and 7d change at 1400%
-  const changeLong = 1400;
+  // Add to 24h and 7d change
+  const changeLong = parseFloat((1400 + change1h).toFixed(2));
 
   return {
     price,
@@ -119,12 +118,9 @@ function getBBBMetrics() {
   const ONE_HOUR_MS = 60 * 60 * 1000;
 
   const computeHourChange = (timestamp) => {
-    if (timestamp - BBB_START_TIME < ONE_HOUR_MS) {
-      return 1.22;
-    }
     const seed = Math.floor(timestamp / 10000);
     const rand = ((seed * 7253 + 12345) % 233280) / 233280;
-    return parseFloat((0.23 + (rand * (0.76 - 0.23))).toFixed(2));
+    return parseFloat((0.09 + (rand * (0.63 - 0.09))).toFixed(2));
   };
 
   let price = BBB_START_PRICE;
@@ -132,11 +128,45 @@ function getBBBMetrics() {
     const change = computeHourChange(t);
     price *= (1 + change / 100);
   }
-  price = parseFloat(price.toFixed(4));
 
   const change1h = computeHourChange(now);
-  const change24h = 21;
-  const change7d = 24;
+  
+  price *= (1 + change1h / 100);
+  price = parseFloat(price.toFixed(4));
+
+  const change24h = parseFloat((21 + change1h).toFixed(2));
+  const change7d = parseFloat((24 + change1h).toFixed(2));
+
+  return { price, change1h, change24h, change7d };
+}
+
+// Baby Trump constants
+const BABYTRUMP_START_PRICE = 8.016;
+const BABYTRUMP_START_TIME = Date.now();
+
+function getBabyTrumpMetrics() {
+  const now = Date.now();
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (timestamp) => {
+    const seed = Math.floor(timestamp / 10000);
+    const rand = ((seed * 5432 + 9876) % 233280) / 233280;
+    return parseFloat((0.09 + (rand * (0.63 - 0.09))).toFixed(2));
+  };
+
+  let price = BABYTRUMP_START_PRICE;
+  for (let t = BABYTRUMP_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t);
+    price *= (1 + change / 100);
+  }
+
+  const change1h = computeHourChange(now);
+  
+  price *= (1 + change1h / 100);
+  price = parseFloat(price.toFixed(4));
+
+  const change24h = parseFloat((2420 + change1h).toFixed(2));
+  const change7d = parseFloat((2420 + change1h).toFixed(2));
 
   return { price, change1h, change24h, change7d };
 }
@@ -201,19 +231,19 @@ const CUSTOM_COINS = [
     name: 'Baby Trump',
     image: 'https://coin-images.coingecko.com/coins/images/38010/large/photo_2024-02-22_13.png',
     get current_price() {
-      return 8.016;
+      return getBabyTrumpMetrics().price;
     },
     market_cap: 1500000,
     market_cap_rank: 7,
     total_volume: 450000,
     get price_change_percentage_1h_in_currency() {
-      return 100;
+      return getBabyTrumpMetrics().change1h;
     },
     get price_change_percentage_24h() {
-      return 2420;
+      return getBabyTrumpMetrics().change24h;
     },
     get price_change_percentage_7d_in_currency() {
-      return 2420;
+      return getBabyTrumpMetrics().change7d;
     },
     circulating_supply: 1000000000,
     max_supply: 1000000000,
