@@ -277,7 +277,7 @@ const CUSTOM_COINS = [
     id: 'trump-tmp',
     symbol: 'tmp',
     name: 'TRUMP TMP',
-    image: 'https://coin-images.coingecko.com/coins/images/31519/large/maga.png',
+    image: '/trump_fight.png',
     get current_price() {
       return getTrumpTMPMetrics().price;
     },
