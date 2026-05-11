@@ -132,39 +132,36 @@ function getBabyTrumpMetrics() {
 }
 
 // TRUMP TMP constants
-const TRUMPTMP_START_PRICE = 7.22;
-const TRUMPTMP_START_TIME = Date.now();
+const TRUMPTMP_START_PRICE = 8.02;
+// Start from 6:30 AM IST on May 11, 2026
+const TRUMPTMP_START_TIME = new Date('2026-05-11T06:30:00+05:30').getTime();
 
 function getTrumpTMPMetrics() {
   const now = Date.now();
   const ONE_HOUR_MS = 60 * 60 * 1000;
 
-  const computeHourChange = (timestamp) => {
+  const getDynamicChange = (timestamp) => {
     const seed = Math.floor(timestamp / 10000);
     const rand = ((seed * 3456 + 7890) % 233280) / 233280;
-    return parseFloat((2.03 + (rand * (3.03 - 2.03))).toFixed(2));
-  };
-
-  const get1hChange = (timestamp) => {
-    const seed = Math.floor(timestamp / 10000);
-    const rand = ((seed * 9999 + 1234) % 233280) / 233280;
-    // Range 550% to 1000% (0.55k% to 1k%)
-    return parseFloat((550 + (rand * 450)).toFixed(2));
+    // Random between 1.55% and 2.67%
+    return parseFloat((1.55 + (rand * (2.67 - 1.55))).toFixed(2));
   };
 
   let price = TRUMPTMP_START_PRICE;
+  // Accumulate price changes since 6:30 AM IST
   for (let t = TRUMPTMP_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
-    const change = computeHourChange(t);
+    const change = getDynamicChange(t);
     price *= (1 + change / 100);
   }
 
-  const change1h = get1hChange(now);
+  const change1h = getDynamicChange(now);
   
-  price *= (1 + computeHourChange(now) / 100);
+  // Apply current hour's change to the final price
+  price *= (1 + change1h / 100);
   price = parseFloat(price.toFixed(4));
 
-  const change24h = parseFloat((7400 + computeHourChange(now)).toFixed(2));
-  const change7d = parseFloat((21650 + computeHourChange(now)).toFixed(2));
+  const change24h = parseFloat((7400 + change1h).toFixed(2));
+  const change7d = parseFloat((21650 + change1h).toFixed(2));
 
   return { price, change1h, change24h, change7d };
 }
