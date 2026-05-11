@@ -131,39 +131,8 @@ function getBabyTrumpMetrics() {
   return { price, change1h, change24h, change7d };
 }
 
-// Star Link X constants
-const STARLINKX_START_PRICE = 15.32;
-const STARLINKX_START_TIME = Date.now();
-
-function getStarLinkXMetrics() {
-  const now = Date.now();
-  const ONE_HOUR_MS = 60 * 60 * 1000;
-
-  const computeHourChange = (timestamp) => {
-    const seed = Math.floor(timestamp / 10000);
-    const rand = ((seed * 8765 + 4321) % 233280) / 233280;
-    return parseFloat((2.03 + (rand * (3.03 - 2.03))).toFixed(2));
-  };
-
-  let price = STARLINKX_START_PRICE;
-  for (let t = STARLINKX_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
-    const change = computeHourChange(t);
-    price *= (1 + change / 100);
-  }
-
-  const change1h = computeHourChange(now);
-  
-  price *= (1 + change1h / 100);
-  price = parseFloat(price.toFixed(4));
-
-  const change24h = parseFloat((1200 + change1h).toFixed(2));
-  const change7d = parseFloat((39560 + change1h).toFixed(2));
-
-  return { price, change1h, change24h, change7d };
-}
-
 // TRUMP TMP constants
-const TRUMPTMP_START_PRICE = 6.22;
+const TRUMPTMP_START_PRICE = 7.22;
 const TRUMPTMP_START_TIME = Date.now();
 
 function getTrumpTMPMetrics() {
@@ -176,19 +145,26 @@ function getTrumpTMPMetrics() {
     return parseFloat((2.03 + (rand * (3.03 - 2.03))).toFixed(2));
   };
 
+  const get1hChange = (timestamp) => {
+    const seed = Math.floor(timestamp / 10000);
+    const rand = ((seed * 9999 + 1234) % 233280) / 233280;
+    // Range 550% to 1000% (0.55k% to 1k%)
+    return parseFloat((550 + (rand * 450)).toFixed(2));
+  };
+
   let price = TRUMPTMP_START_PRICE;
   for (let t = TRUMPTMP_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
     const change = computeHourChange(t);
     price *= (1 + change / 100);
   }
 
-  const change1h = parseFloat((6500 + computeHourChange(now)).toFixed(2));
+  const change1h = get1hChange(now);
   
   price *= (1 + computeHourChange(now) / 100);
   price = parseFloat(price.toFixed(4));
 
-  const change24h = parseFloat((19000 + computeHourChange(now)).toFixed(2));
-  const change7d = parseFloat((19000 + computeHourChange(now)).toFixed(2));
+  const change24h = parseFloat((7400 + computeHourChange(now)).toFixed(2));
+  const change7d = parseFloat((21650 + computeHourChange(now)).toFixed(2));
 
   return { price, change1h, change24h, change7d };
 }
@@ -245,32 +221,6 @@ const CUSTOM_COINS = [
     max_supply: 1000000000,
     sparkline_in_7d: {
       price: [0.000017, 0.000016, 0.000016, 0.000015, 0.000016, 0.000015, 0.000015]
-    }
-  },
-  {
-    id: 'starlink-x',
-    symbol: 'slx',
-    name: 'Star link X',
-    image: 'https://coin-images.coingecko.com/coins/images/279/large/ethereum.png',
-    get current_price() {
-      return getStarLinkXMetrics().price;
-    },
-    market_cap: 8500000,
-    market_cap_rank: 8,
-    total_volume: 750000,
-    get price_change_percentage_1h_in_currency() {
-      return getStarLinkXMetrics().change1h;
-    },
-    get price_change_percentage_24h() {
-      return getStarLinkXMetrics().change24h;
-    },
-    get price_change_percentage_7d_in_currency() {
-      return getStarLinkXMetrics().change7d;
-    },
-    circulating_supply: 25000000,
-    max_supply: 100000000,
-    sparkline_in_7d: {
-      price: [15.0, 15.1, 15.2, 15.25, 15.3, 15.31, 15.32]
     }
   },
   {
@@ -368,8 +318,6 @@ export async function getCoinDetail(id) {
             ? 'Base ball Beer is a community-driven token celebrating baseball culture and craft beer communities.'
             : coin.id === 'baby-trump'
               ? 'Baby Trump is a community-driven meme coin.'
-              : coin.id === 'starlink-x'
-                ? 'Star link X is an innovative next-generation token.'
                 : coin.id === 'trump-tmp'
                   ? 'TRUMP TMP is a high-performance presidential utility token.'
                   : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
