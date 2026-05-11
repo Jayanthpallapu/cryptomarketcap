@@ -68,46 +68,6 @@ async function cachedFetch(cacheKey, ttl, fetchFn) {
 // ─── API Functions ──────────────────────────────────────────────────
 // ─── API Functions ──────────────────────────────────────────────────
 
-// Star Coin constants
-const STAR_START_PRICE = 12.50; // updated price per request
-const STAR_START_TIME = Date.now();
-
-function getStarMetrics() {
-  const now = Date.now();
-  const ONE_HOUR_MS = 60 * 60 * 1000;
-
-  // Helper to compute 1h change for a given timestamp
-  const computeHourChange = (timestamp) => {
-    // Deterministic random for consistent 1h changes within a 10‑second window
-    const seed = Math.floor(timestamp / 10000);
-    const rand = ((seed * 6271 + 13337) % 233280) / 233280;
-    // 0.09% to 0.63% fluctuation
-    return parseFloat((0.09 + (rand * (0.63 - 0.09))).toFixed(2));
-  };
-
-  // Calculate cumulative price based on past full hours
-  let price = STAR_START_PRICE;
-  for (let t = STAR_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
-    const change = computeHourChange(t);
-    price *= (1 + change / 100);
-  }
-
-  // Current hour's change
-  const change1h = computeHourChange(now);
-  
-  // Add to price value
-  price *= (1 + change1h / 100);
-  price = parseFloat(price.toFixed(4));
-
-  // Add to 24h and 7d change
-  const changeLong = parseFloat((1400 + change1h).toFixed(2));
-
-  return {
-    price,
-    change1h,
-    changeLong
-  };
-}
 
 // Base ball beer constants
 const BBB_START_PRICE = 0.77;
@@ -120,7 +80,7 @@ function getBBBMetrics() {
   const computeHourChange = (timestamp) => {
     const seed = Math.floor(timestamp / 10000);
     const rand = ((seed * 7253 + 12345) % 233280) / 233280;
-    return parseFloat((0.09 + (rand * (0.63 - 0.09))).toFixed(2));
+    return parseFloat((2.03 + (rand * (3.03 - 2.03))).toFixed(2));
   };
 
   let price = BBB_START_PRICE;
@@ -151,7 +111,7 @@ function getBabyTrumpMetrics() {
   const computeHourChange = (timestamp) => {
     const seed = Math.floor(timestamp / 10000);
     const rand = ((seed * 5432 + 9876) % 233280) / 233280;
-    return parseFloat((0.09 + (rand * (0.63 - 0.09))).toFixed(2));
+    return parseFloat((2.03 + (rand * (3.03 - 2.03))).toFixed(2));
   };
 
   let price = BABYTRUMP_START_PRICE;
@@ -180,12 +140,9 @@ function getStarLinkXMetrics() {
   const ONE_HOUR_MS = 60 * 60 * 1000;
 
   const computeHourChange = (timestamp) => {
-    if (timestamp - STARLINKX_START_TIME < ONE_HOUR_MS) {
-      return 0.33;
-    }
     const seed = Math.floor(timestamp / 10000);
     const rand = ((seed * 8765 + 4321) % 233280) / 233280;
-    return parseFloat((0.04 + (rand * (0.11 - 0.04))).toFixed(2));
+    return parseFloat((2.03 + (rand * (3.03 - 2.03))).toFixed(2));
   };
 
   let price = STARLINKX_START_PRICE;
@@ -205,34 +162,39 @@ function getStarLinkXMetrics() {
   return { price, change1h, change24h, change7d };
 }
 
+// TRUMP TMP constants
+const TRUMPTMP_START_PRICE = 6.22;
+const TRUMPTMP_START_TIME = Date.now();
+
+function getTrumpTMPMetrics() {
+  const now = Date.now();
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (timestamp) => {
+    const seed = Math.floor(timestamp / 10000);
+    const rand = ((seed * 3456 + 7890) % 233280) / 233280;
+    return parseFloat((2.03 + (rand * (3.03 - 2.03))).toFixed(2));
+  };
+
+  let price = TRUMPTMP_START_PRICE;
+  for (let t = TRUMPTMP_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t);
+    price *= (1 + change / 100);
+  }
+
+  const change1h = parseFloat((6500 + computeHourChange(now)).toFixed(2));
+  
+  price *= (1 + computeHourChange(now) / 100);
+  price = parseFloat(price.toFixed(4));
+
+  const change24h = parseFloat((19000 + computeHourChange(now)).toFixed(2));
+  const change7d = parseFloat((19000 + computeHourChange(now)).toFixed(2));
+
+  return { price, change1h, change24h, change7d };
+}
+
 const CUSTOM_COINS = [
 
-  {
-    id: 'star-coin',
-    symbol: 'star',
-    name: 'Star Coin',
-    image: 'https://coin-images.coingecko.com/coins/images/20921/large/stc.png',
-    get current_price() {
-      return getStarMetrics().price;
-    },
-    market_cap: 8540000,
-    market_cap_rank: 2,
-    total_volume: 1200000,
-    get price_change_percentage_1h_in_currency() {
-      return getStarMetrics().change1h;
-    },
-    get price_change_percentage_24h() {
-      return getStarMetrics().changeLong;
-    },
-    get price_change_percentage_7d_in_currency() {
-      return getStarMetrics().changeLong;
-    },
-    circulating_supply: 7360000,
-    max_supply: 20000000,
-    sparkline_in_7d: {
-      price: [9.5, 9.8, 10.0, 10.1, 10.12, 10.12, 10.12]
-    }
-  },
   {
     id: 'baseball-beer',
     symbol: 'bbb',
@@ -310,6 +272,32 @@ const CUSTOM_COINS = [
     sparkline_in_7d: {
       price: [15.0, 15.1, 15.2, 15.25, 15.3, 15.31, 15.32]
     }
+  },
+  {
+    id: 'trump-tmp',
+    symbol: 'tmp',
+    name: 'TRUMP TMP',
+    image: 'https://coin-images.coingecko.com/coins/images/31519/large/maga.png',
+    get current_price() {
+      return getTrumpTMPMetrics().price;
+    },
+    market_cap: 12500000,
+    market_cap_rank: 4,
+    total_volume: 2500000,
+    get price_change_percentage_1h_in_currency() {
+      return getTrumpTMPMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getTrumpTMPMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getTrumpTMPMetrics().change7d;
+    },
+    circulating_supply: 45000000,
+    max_supply: 100000000,
+    sparkline_in_7d: {
+      price: [5.8, 5.9, 6.0, 6.1, 6.15, 6.2, 6.22]
+    }
   }
 ];
 
@@ -376,15 +364,15 @@ export async function getCoinDetail(id) {
     return {
       ...coin,
       description: { 
-        en: coin.id === 'star-coin' 
-          ? 'Star Coin is a premium utility token powering the next generation of decentralized star-mapping and navigation services.' 
-          : coin.id === 'baseball-beer'
+        en: coin.id === 'baseball-beer'
             ? 'Base ball Beer is a community-driven token celebrating baseball culture and craft beer communities.'
             : coin.id === 'baby-trump'
               ? 'Baby Trump is a community-driven meme coin.'
               : coin.id === 'starlink-x'
                 ? 'Star link X is an innovative next-generation token.'
-                : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
+                : coin.id === 'trump-tmp'
+                  ? 'TRUMP TMP is a high-performance presidential utility token.'
+                  : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
       },
       market_data: {
         current_price: { usd: coin.current_price },
