@@ -69,36 +69,6 @@ async function cachedFetch(cacheKey, ttl, fetchFn) {
 // ─── API Functions ──────────────────────────────────────────────────
 
 
-// Base ball beer constants
-const BBB_START_PRICE = 0.77;
-const BBB_START_TIME = Date.now();
-
-function getBBBMetrics() {
-  const now = Date.now();
-  const ONE_HOUR_MS = 60 * 60 * 1000;
-
-  const computeHourChange = (timestamp) => {
-    const seed = Math.floor(timestamp / 10000);
-    const rand = ((seed * 7253 + 12345) % 233280) / 233280;
-    return parseFloat((2.03 + (rand * (3.03 - 2.03))).toFixed(2));
-  };
-
-  let price = BBB_START_PRICE;
-  for (let t = BBB_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
-    const change = computeHourChange(t);
-    price *= (1 + change / 100);
-  }
-
-  const change1h = computeHourChange(now);
-  
-  price *= (1 + change1h / 100);
-  price = parseFloat(price.toFixed(4));
-
-  const change24h = parseFloat((21 + change1h).toFixed(2));
-  const change7d = parseFloat((24 + change1h).toFixed(2));
-
-  return { price, change1h, change24h, change7d };
-}
 
 // Baby Trump constants
 const BABYTRUMP_START_PRICE = 8.016;
@@ -209,32 +179,6 @@ function getTrumpUSMetrics() {
 
 const CUSTOM_COINS = [
 
-  {
-    id: 'baseball-beer',
-    symbol: 'bbb',
-    name: 'Base ball Beer',
-    image: 'https://coin-images.coingecko.com/coins/images/38123/large/beer_%281%29.jpg',
-    get current_price() {
-      return getBBBMetrics().price;
-    },
-    market_cap: 3200000,
-    market_cap_rank: 5,
-    total_volume: 850000,
-    get price_change_percentage_1h_in_currency() {
-      return getBBBMetrics().change1h;
-    },
-    get price_change_percentage_24h() {
-      return getBBBMetrics().change24h;
-    },
-    get price_change_percentage_7d_in_currency() {
-      return getBBBMetrics().change7d;
-    },
-    circulating_supply: 15000000,
-    max_supply: 50000000,
-    sparkline_in_7d: {
-      price: [0.60, 0.63, 0.65, 0.64, 0.66, 0.69, 0.72]
-    }
-  },
   {
     id: 'baby-trump',
     symbol: 'babytrump',
@@ -378,9 +322,7 @@ export async function getCoinDetail(id) {
     return {
       ...coin,
       description: { 
-        en: coin.id === 'baseball-beer'
-            ? 'Base ball Beer is a community-driven token celebrating baseball culture and craft beer communities.'
-            : coin.id === 'baby-trump'
+        en: coin.id === 'baby-trump'
               ? 'Baby Trump is a community-driven meme coin.'
                 : coin.id === 'trump-tmp'
                   ? 'trump tmp is a high-performance presidential utility token.'
