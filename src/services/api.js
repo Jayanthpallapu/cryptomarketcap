@@ -162,7 +162,7 @@ function getTrumpTMPMetrics() {
     if (t + ONE_HOUR_MS <= t7dAgo) price7dAgo = price;
   }
 
-  const change1h = getDynamicChange(now);
+  const change1h = 0.19;
   
   // Apply current hour's change to the final price
   price *= (1 + change1h / 100);
