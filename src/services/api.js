@@ -1,4 +1,4 @@
-// CoinGecko Free Public API - No API key required
+// CoinGecko Free Public API - Last Deploy: 2026-05-12T17:18:40+05:30
 const BASE = 'https://api.coingecko.com/api/v3';
 
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
