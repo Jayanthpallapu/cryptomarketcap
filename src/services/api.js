@@ -66,7 +66,38 @@ async function cachedFetch(cacheKey, ttl, fetchFn) {
 }
 
 // ─── API Functions ──────────────────────────────────────────────────
-// ─── API Functions ──────────────────────────────────────────────────
+
+// Oil Lab constants
+const OILLAB_START_PRICE = 0.02822;
+const OILLAB_START_TIME = Date.now();
+
+function getOilLabMetrics() {
+  const now = Date.now();
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (timestamp) => {
+    const seed = Math.floor(timestamp / 10000);
+    const rand = ((seed * 1357 + 2468) % 233280) / 233280;
+    // Small hourly change around 0.01%
+    return parseFloat((0.005 + (rand * (0.015 - 0.005))).toFixed(3));
+  };
+
+  let price = OILLAB_START_PRICE;
+  for (let t = OILLAB_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t);
+    price *= (1 + change / 100);
+  }
+
+  const change1h = computeHourChange(now);
+  price *= (1 + change1h / 100);
+  price = parseFloat(price.toFixed(6));
+
+  // User requested: 1hr: 0.01%, 24hrs: 5%, 7days: 12K%
+  const change24h = parseFloat((5 + (change1h - 0.01)).toFixed(2));
+  const change7d = parseFloat((12000 + (change1h - 0.01)).toFixed(2));
+
+  return { price, change1h, change24h, change7d };
+}
 
 
 
@@ -178,6 +209,32 @@ function getTrumpUSMetrics() {
 }
 
 const CUSTOM_COINS = [
+  {
+    id: 'oil-lab',
+    symbol: 'oil',
+    name: 'Oil Lab',
+    image: '/oil_lab.png',
+    get current_price() {
+      return getOilLabMetrics().price;
+    },
+    market_cap: 8500000,
+    market_cap_rank: 6,
+    total_volume: 1250000,
+    get price_change_percentage_1h_in_currency() {
+      return getOilLabMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getOilLabMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getOilLabMetrics().change7d;
+    },
+    circulating_supply: 301180000,
+    max_supply: 1000000000,
+    sparkline_in_7d: {
+      price: [0.000002, 0.000005, 0.000015, 0.0001, 0.005, 0.02, 0.02822]
+    }
+  },
 
   {
     id: 'baby-trump',
@@ -322,7 +379,9 @@ export async function getCoinDetail(id) {
     return {
       ...coin,
       description: { 
-        en: coin.id === 'baby-trump'
+        en: coin.id === 'oil-lab'
+            ? 'Oil Lab is a pioneering decentralized science (DeSci) token focused on optimizing energy extraction and sustainable oil research.'
+            : coin.id === 'baby-trump'
               ? 'Baby Trump is a community-driven meme coin.'
                 : coin.id === 'trump-tmp'
                   ? 'trump tmp is a high-performance presidential utility token.'
