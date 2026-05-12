@@ -132,7 +132,7 @@ function getBabyTrumpMetrics() {
 }
 
 // trump tmp constants
-const TRUMPTMP_START_PRICE = 8.02;
+const TRUMPTMP_START_PRICE = 13.98;
 // Start from 6:30 AM IST on May 11, 2026
 const TRUMPTMP_START_TIME = new Date('2026-05-11T06:30:00+05:30').getTime();
 
@@ -162,7 +162,7 @@ function getTrumpTMPMetrics() {
     if (t + ONE_HOUR_MS <= t7dAgo) price7dAgo = price;
   }
 
-  const change1h = 0.19;
+  const change1h = parseFloat((0.08 + Math.random() * (0.19 - 0.08)).toFixed(2));
   
   // Apply current hour's change to the final price
   price *= (1 + change1h / 100);
