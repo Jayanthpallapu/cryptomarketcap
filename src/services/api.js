@@ -131,7 +131,7 @@ function getBabyTrumpMetrics() {
   return { price, change1h, change24h, change7d };
 }
 
-// TRUMP TMP constants
+// trump tmp constants
 const TRUMPTMP_START_PRICE = 8.02;
 // Start from 6:30 AM IST on May 11, 2026
 const TRUMPTMP_START_TIME = new Date('2026-05-11T06:30:00+05:30').getTime();
@@ -139,29 +139,70 @@ const TRUMPTMP_START_TIME = new Date('2026-05-11T06:30:00+05:30').getTime();
 function getTrumpTMPMetrics() {
   const now = Date.now();
   const ONE_HOUR_MS = 60 * 60 * 1000;
+  const t24hAgo = now - 24 * ONE_HOUR_MS;
+  const t7dAgo = now - 7 * 24 * ONE_HOUR_MS;
 
   const getDynamicChange = (timestamp) => {
     const seed = Math.floor(timestamp / 10000);
     const rand = ((seed * 3456 + 7890) % 233280) / 233280;
-    // Random between 1.55% and 2.67%
-    return parseFloat((1.55 + (rand * (2.67 - 1.55))).toFixed(2));
+    // Randomly negative between 2.45% and 0.76%
+    return parseFloat((-2.45 + (rand * (2.45 - 0.76))).toFixed(2));
   };
 
   let price = TRUMPTMP_START_PRICE;
-  // Accumulate price changes since 6:30 AM IST
+  let price24hAgo = TRUMPTMP_START_PRICE;
+  let price7dAgo = TRUMPTMP_START_PRICE;
+
+  // Accumulate price changes since start
   for (let t = TRUMPTMP_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
     const change = getDynamicChange(t);
     price *= (1 + change / 100);
+    
+    if (t + ONE_HOUR_MS <= t24hAgo) price24hAgo = price;
+    if (t + ONE_HOUR_MS <= t7dAgo) price7dAgo = price;
   }
 
   const change1h = getDynamicChange(now);
   
   // Apply current hour's change to the final price
   price *= (1 + change1h / 100);
+  const currentPrice = parseFloat(price.toFixed(4));
+
+  // Calculate 24h and 7d changes based on historical accumulation
+  const change24h = parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2));
+  const change7d = parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2));
+
+  return { price: currentPrice, change1h, change24h, change7d };
+}
+
+// TRUMP US constants
+const TRUMPUS_START_PRICE = 3.15;
+const TRUMPUS_START_TIME = Date.now();
+
+function getTrumpUSMetrics() {
+  const now = Date.now();
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (timestamp) => {
+    const seed = Math.floor(timestamp / 10000);
+    const rand = ((seed * 2345 + 6789) % 233280) / 233280;
+    // Random between 0.33% and 1.08%
+    return parseFloat((0.33 + (rand * (1.08 - 0.33))).toFixed(2));
+  };
+
+  let price = TRUMPUS_START_PRICE;
+  for (let t = TRUMPUS_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t);
+    price *= (1 + change / 100);
+  }
+
+  const change1h = computeHourChange(now);
+  
+  price *= (1 + change1h / 100);
   price = parseFloat(price.toFixed(4));
 
-  const change24h = parseFloat((7400 + change1h).toFixed(2));
-  const change7d = parseFloat((21650 + change1h).toFixed(2));
+  const change24h = parseFloat((55 + change1h).toFixed(2));
+  const change7d = parseFloat((675 + change1h).toFixed(2));
 
   return { price, change1h, change24h, change7d };
 }
@@ -223,7 +264,7 @@ const CUSTOM_COINS = [
   {
     id: 'trump-tmp',
     symbol: 'tmp',
-    name: 'TRUMP TMP',
+    name: 'trump tmp',
     image: '/trump_fight.png',
     get current_price() {
       return getTrumpTMPMetrics().price;
@@ -244,6 +285,32 @@ const CUSTOM_COINS = [
     max_supply: 100000000,
     sparkline_in_7d: {
       price: [5.8, 5.9, 6.0, 6.1, 6.15, 6.2, 6.22]
+    }
+  },
+  {
+    id: 'trump-us',
+    symbol: 'us',
+    name: 'TRUMP US',
+    image: '/trump_us.png',
+    get current_price() {
+      return getTrumpUSMetrics().price;
+    },
+    market_cap: 85000000,
+    market_cap_rank: 3,
+    total_volume: 12000000,
+    get price_change_percentage_1h_in_currency() {
+      return getTrumpUSMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getTrumpUSMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getTrumpUSMetrics().change7d;
+    },
+    circulating_supply: 27000000,
+    max_supply: 100000000,
+    sparkline_in_7d: {
+      price: [2.5, 2.7, 2.9, 3.0, 3.1, 3.12, 3.15]
     }
   }
 ];
@@ -316,8 +383,10 @@ export async function getCoinDetail(id) {
             : coin.id === 'baby-trump'
               ? 'Baby Trump is a community-driven meme coin.'
                 : coin.id === 'trump-tmp'
-                  ? 'TRUMP TMP is a high-performance presidential utility token.'
-                  : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
+                  ? 'trump tmp is a high-performance presidential utility token.'
+                  : coin.id === 'trump-us'
+                    ? 'TRUMP US is a premium digital asset representing excellence and growth.'
+                    : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
       },
       market_data: {
         current_price: { usd: coin.current_price },
