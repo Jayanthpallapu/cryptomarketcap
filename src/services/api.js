@@ -78,11 +78,12 @@ function getOilLabMetrics() {
   const computeHourChange = (timestamp) => {
     const seed = Math.floor(timestamp / 10000);
     const rand = ((seed * 1357 + 2468) % 233280) / 233280;
-    // Small hourly change around 0.01%
-    return parseFloat((0.005 + (rand * (0.015 - 0.005))).toFixed(3));
+    // User requested: 4.65% to 5.12% randomly
+    return parseFloat((4.65 + (rand * (5.12 - 4.65))).toFixed(2));
   };
 
   let price = OILLAB_START_PRICE;
+  // Calculate price accumulation since start time
   for (let t = OILLAB_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
     const change = computeHourChange(t);
     price *= (1 + change / 100);
@@ -92,9 +93,9 @@ function getOilLabMetrics() {
   price *= (1 + change1h / 100);
   price = parseFloat(price.toFixed(6));
 
-  // User requested: 1hr: 0.01%, 24hrs: 5%, 7days: 12K%
-  const change24h = parseFloat((5 + (change1h - 0.01)).toFixed(2));
-  const change7d = parseFloat((12000 + (change1h - 0.01)).toFixed(2));
+  // Update 24h and 7d percentages to reflect high growth
+  const change24h = parseFloat((88.45 + (change1h - 4.65)).toFixed(2));
+  const change7d = parseFloat((12540.12 + (change1h - 4.65)).toFixed(2));
 
   return { price, change1h, change24h, change7d };
 }
