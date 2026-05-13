@@ -177,8 +177,8 @@ function getTrumpTMPMetrics() {
   return { price: currentPrice, change1h, change24h, change7d };
 }
 
-// TRUMP US constants
-const TRUMPUS_START_PRICE = 3.15;
+// Trump US constants
+const TRUMPUS_START_PRICE = 3.25;
 const TRUMPUS_START_TIME = Date.now();
 
 function getTrumpUSMetrics() {
@@ -208,6 +208,39 @@ function getTrumpUSMetrics() {
 
   return { price, change1h, change24h, change7d };
 }
+
+// BlackRock Contract constants
+const BLACKROCK_START_PRICE = 4.12;
+const BLACKROCK_START_TIME = new Date('2026-05-13T08:30:00+05:30').getTime();
+
+function getBlackRockMetrics() {
+  const now = Date.now();
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeCentsIncrease = (timestamp) => {
+    const seed = Math.floor(timestamp / 10000);
+    const rand = ((seed * 7890 + 1234) % 233280) / 233280;
+    // 8 to 11 cents
+    return 0.08 + (rand * (0.11 - 0.08));
+  };
+
+  let price = BLACKROCK_START_PRICE;
+  // Calculate price accumulation since start
+  for (let t = BLACKROCK_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+    price += computeCentsIncrease(t);
+  }
+
+  const currentInc = computeCentsIncrease(now);
+  price += currentInc;
+
+  // Metrics: 1h: 1.2k%, 24h: 1.3k%, 7d: 2.3M%
+  const change1h = parseFloat((1200 + (currentInc * 10)).toFixed(2));
+  const change24h = parseFloat((1300 + (currentInc * 10)).toFixed(2));
+  const change7d = parseFloat((2300000 + (currentInc * 10)).toFixed(2));
+
+  return { price: parseFloat(price.toFixed(2)), change1h, change24h, change7d };
+}
+
 
 const CUSTOM_COINS = [
   {
@@ -292,7 +325,7 @@ const CUSTOM_COINS = [
   {
     id: 'trump-us',
     symbol: 'us',
-    name: 'TRUMP US',
+    name: 'Trump US',
     image: '/trump_us.png',
     get current_price() {
       return getTrumpUSMetrics().price;
@@ -313,6 +346,32 @@ const CUSTOM_COINS = [
     max_supply: 100000000,
     sparkline_in_7d: {
       price: [2.5, 2.7, 2.9, 3.0, 3.1, 3.12, 3.15]
+    }
+  },
+  {
+    id: 'blackrock-contract',
+    symbol: 'blc',
+    name: 'BlackRock Contract',
+    image: '/blackrock_contract_logo.png',
+    get current_price() {
+      return getBlackRockMetrics().price;
+    },
+    market_cap: 950000000,
+    market_cap_rank: 1,
+    total_volume: 45000000,
+    get price_change_percentage_1h_in_currency() {
+      return getBlackRockMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getBlackRockMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getBlackRockMetrics().change7d;
+    },
+    circulating_supply: 100000000,
+    max_supply: 100000000,
+    sparkline_in_7d: {
+      price: [1.2, 1.8, 2.5, 3.2, 3.8, 4.0, 4.12]
     }
   }
 ];
@@ -387,8 +446,10 @@ export async function getCoinDetail(id) {
                 : coin.id === 'trump-tmp'
                   ? 'trump tmp is a high-performance presidential utility token.'
                   : coin.id === 'trump-us'
-                    ? 'TRUMP US is a premium digital asset representing excellence and growth.'
-                    : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
+                    ? 'Trump US is a premium digital asset representing excellence and growth.'
+                    : coin.id === 'blackrock-contract'
+                      ? 'BlackRock Contract is an institutional-grade digital asset with unprecedented growth metrics.'
+                      : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
       },
       market_data: {
         current_price: { usd: coin.current_price },
