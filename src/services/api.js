@@ -210,33 +210,29 @@ function getTrumpUSMetrics() {
 }
 
 // BlackRock Contract constants
-const BLACKROCK_START_PRICE = 4.12;
-const BLACKROCK_START_TIME = new Date('2026-05-13T08:30:00+05:30').getTime();
+const BLACKROCK_TARGET_TIME = new Date('2026-05-13T15:00:00+05:30').getTime();
 
 function getBlackRockMetrics() {
   const now = Date.now();
-  const ONE_HOUR_MS = 60 * 60 * 1000;
 
-  const computeCentsIncrease = (timestamp) => {
+  const computeHourChange = (timestamp) => {
     const seed = Math.floor(timestamp / 10000);
     const rand = ((seed * 7890 + 1234) % 233280) / 233280;
-    // 8 to 11 cents
-    return 0.08 + (rand * (0.11 - 0.08));
+    // Generate a dynamic percentage change
+    return parseFloat((1.15 + (rand * (2.45 - 1.15))).toFixed(2));
   };
 
-  let price = BLACKROCK_START_PRICE;
-  // Calculate price accumulation since start
-  for (let t = BLACKROCK_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
-    price += computeCentsIncrease(t);
-  }
-
-  const currentInc = computeCentsIncrease(now);
-  price += currentInc;
-
-  // Metrics: 1h: 1.2k%, 24h: 1.3k%, 7d: 2.3M%
-  const change1h = parseFloat((1200 + (currentInc * 10)).toFixed(2));
-  const change24h = parseFloat((1300 + (currentInc * 10)).toFixed(2));
-  const change7d = parseFloat((2300000 + (currentInc * 10)).toFixed(2));
+  const change1h = computeHourChange(now);
+  
+  // Price is 6.32, but becomes 7.03 at 3 PM IST
+  let price = now >= BLACKROCK_TARGET_TIME ? 7.03 : 6.32;
+  
+  // Apply dynamic 1h change to the price to keep it active
+  price *= (1 + change1h / 100);
+  
+  // Add up the 1 hr % change to 24 hrs & 7 Days
+  const change24h = parseFloat((1300 + change1h).toFixed(2));
+  const change7d = parseFloat((2300000 + change1h).toFixed(2));
 
   return { price: parseFloat(price.toFixed(2)), change1h, change24h, change7d };
 }
