@@ -68,8 +68,8 @@ async function cachedFetch(cacheKey, ttl, fetchFn) {
 // ─── API Functions ──────────────────────────────────────────────────
 
 // Oil Lab constants
-const OILLAB_START_PRICE = 0.02822;
-const OILLAB_START_TIME = Date.now();
+const OILLAB_START_PRICE = 0.05625;
+const OILLAB_START_TIME = new Date('2026-05-13T08:54:56+05:30').getTime();
 
 function getOilLabMetrics() {
   const now = Date.now();
@@ -91,11 +91,11 @@ function getOilLabMetrics() {
 
   const change1h = computeHourChange(now);
   price *= (1 + change1h / 100);
-  price = parseFloat(price.toFixed(6));
+  price = parseFloat(price.toFixed(5));
 
-  // Update 24h and 7d percentages to reflect high growth
-  const change24h = parseFloat((88.45 + (change1h - 4.65)).toFixed(2));
-  const change7d = parseFloat((12540.12 + (change1h - 4.65)).toFixed(2));
+  // Update 24h and 7d percentages to dynamically reflect the 1h change
+  const change24h = parseFloat((88.45 + change1h).toFixed(2));
+  const change7d = parseFloat((12540.12 + change1h).toFixed(2));
 
   return { price, change1h, change24h, change7d };
 }
