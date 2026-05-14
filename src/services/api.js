@@ -72,12 +72,11 @@ const MUSKMINI_START_PRICE = 0.07496;
 const MUSKMINI_THRESHOLD = MUSKMINI_START_PRICE * 1.30; // 30% above start
 const MUSKMINI_START_TIME = new Date('2026-05-14T00:00:00+05:30').getTime();
 
-function getMuskMiniXMetrics() {
-  const now = Date.now();
+function getMuskMiniXMetrics(timestamp = Date.now()) {
   const ONE_HOUR_MS = 60 * 60 * 1000;
 
-  const computeHourChange = (timestamp, currentPrice) => {
-    const seed = Math.floor(timestamp / 10000);
+  const computeHourChange = (t, currentPrice) => {
+    const seed = Math.floor(t / 3600000); // Hourly seed
     const rand = ((seed * 6173 + 3141) % 233280) / 233280;
     if (currentPrice < MUSKMINI_THRESHOLD) {
       // Phase 1: 3.56% to 4.96% increase per hour
@@ -91,18 +90,20 @@ function getMuskMiniXMetrics() {
   let price = MUSKMINI_START_PRICE;
   let price24hAgo = MUSKMINI_START_PRICE;
   let price7dAgo = MUSKMINI_START_PRICE;
-  const t24hAgo = now - 24 * ONE_HOUR_MS;
-  const t7dAgo = now - 7 * 24 * ONE_HOUR_MS;
+  const t24hAgo = timestamp - 24 * ONE_HOUR_MS;
+  const t7dAgo = timestamp - 7 * 24 * ONE_HOUR_MS;
 
-  for (let t = MUSKMINI_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+  for (let t = MUSKMINI_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
     const change = computeHourChange(t, price);
     price *= (1 + change / 100);
     if (t + ONE_HOUR_MS <= t24hAgo) price24hAgo = price;
     if (t + ONE_HOUR_MS <= t7dAgo) price7dAgo = price;
   }
 
-  const change1h = computeHourChange(now, price);
-  price *= (1 + change1h / 100);
+  const change1h = computeHourChange(timestamp, price);
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
   const currentPrice = parseFloat(price.toFixed(5));
 
   const change24h = price24hAgo !== MUSKMINI_START_PRICE
@@ -290,26 +291,28 @@ function getBlackRockMetrics() {
 const OSRO_START_PRICE = 1.02;
 const OSRO_START_TIME = Date.now();
 
-function getOSROMetrics() {
-  const now = Date.now();
+function getOSROMetrics(timestamp = Date.now()) {
   const ONE_HOUR_MS = 60 * 60 * 1000;
 
-  const computeHourChange = (timestamp) => {
-    const seed = Math.floor(timestamp / 10000);
-    const rand = ((seed * 3333 + 7777) % 233280) / 233280;
+  const computeHourChange = (t) => {
+    const seed = Math.floor(t / 3600000); // Hourly seed
+    const rand = ((seed * 7173 + 4141) % 233280) / 233280;
     // Drastically reduced 1h % change to show correction (e.g. -2.15% to -5.45%)
     return parseFloat((-5.45 + (rand * (-2.15 - -5.45))).toFixed(2));
   };
 
   let price = OSRO_START_PRICE;
   
-  for (let t = OSRO_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+  for (let t = OSRO_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
     const change = computeHourChange(t);
     price *= (1 + change / 100);
   }
 
-  const change1h = computeHourChange(now);
-  price *= (1 + change1h / 100);
+  const change1h = computeHourChange(timestamp);
+  // Only apply the "current" hour change if we are looking at "now"
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
   
   const currentPrice = parseFloat(price.toFixed(4));
 
@@ -625,26 +628,60 @@ export async function getCoinDetail(id) {
 export async function getCoinChart(id, days = 7) {
   const custom = CUSTOM_COINS.find(c => c.id === id);
   if (custom) {
-    // Generate realistic OHLC candlestick data for custom coins
     const now = Date.now();
     const numCandles = days === 1 ? 24 : days === 7 ? 56 : days === 30 ? 60 : 90;
     const intervalMs = (days === 'max' ? 365 : days) * 24 * 3600000 / numCandles;
-    const basePrice = custom.current_price;
     const ohlc = [];
     const prices = [];
-    let price = basePrice * (0.7 + Math.random() * 0.1);
 
-    for (let i = 0; i < numCandles; i++) {
-      const t = now - (numCandles - i) * intervalMs;
-      const volatility = 0.015 + Math.random() * 0.025;
-      const open = price;
-      const change = (Math.random() - 0.46) * volatility;
-      const close = open * (1 + change);
-      const high = Math.max(open, close) * (1 + Math.random() * volatility * 0.5);
-      const low = Math.min(open, close) * (1 - Math.random() * volatility * 0.5);
-      ohlc.push({ x: t, o: parseFloat(open.toFixed(8)), h: parseFloat(high.toFixed(8)), l: parseFloat(low.toFixed(8)), c: parseFloat(close.toFixed(8)) });
-      prices.push([t, close]);
-      price = close;
+    // Map custom ID to its metrics function
+    const metricsMap = {
+      'osro': getOSROMetrics,
+      'musk-mini-x': getMuskMiniXMetrics,
+      'oil-lab': getOilLabMetrics,
+      'baby-trump': getBabyTrumpMetrics,
+      'trump-tmp': getTrumpTMPMetrics,
+      'trump-us': getTrumpUSMetrics,
+      'blackrock-contract': getBlackRockMetrics
+    };
+
+    const getMetrics = metricsMap[id];
+
+    if (getMetrics) {
+      for (let i = 0; i < numCandles; i++) {
+        const t = now - (numCandles - i) * intervalMs;
+        const currentData = getMetrics(t);
+        const open = currentData.price;
+        // Estimate close by looking a bit ahead or just use next candle's open
+        const nextT = t + intervalMs;
+        const nextData = getMetrics(nextT > now ? now : nextT);
+        const close = nextData.price;
+        
+        // Add some "wick" volatility for the candle
+        const volatility = 0.005; 
+        const high = Math.max(open, close) * (1 + Math.random() * volatility);
+        const low = Math.min(open, close) * (1 - Math.random() * volatility);
+
+        ohlc.push({ 
+          x: t, 
+          o: parseFloat(open.toFixed(8)), 
+          h: parseFloat(high.toFixed(8)), 
+          l: parseFloat(low.toFixed(8)), 
+          c: parseFloat(close.toFixed(8)) 
+        });
+        prices.push([t, close]);
+      }
+    } else {
+      // Fallback to random if no function found (shouldn't happen)
+      let price = custom.current_price * 0.8;
+      for (let i = 0; i < numCandles; i++) {
+        const t = now - (numCandles - i) * intervalMs;
+        const open = price;
+        const close = open * (1 + (Math.random() - 0.48) * 0.02);
+        ohlc.push({ x: t, o: open, h: Math.max(open, close) * 1.01, l: Math.min(open, close) * 0.99, c: close });
+        prices.push([t, close]);
+        price = close;
+      }
     }
     return { prices, ohlc };
   }
