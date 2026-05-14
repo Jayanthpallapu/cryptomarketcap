@@ -578,6 +578,11 @@ export async function getCoinDetail(id) {
 
     return {
       ...coin,
+      image: {
+        thumb: coin.image,
+        small: coin.image,
+        large: coin.image
+      },
       description: { 
         en: coin.id === 'oil-lab'
             ? 'Oil Lab is a pioneering decentralized science (DeSci) token focused on optimizing energy extraction and sustainable oil research.'
