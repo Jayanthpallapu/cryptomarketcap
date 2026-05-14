@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const newsData = [
   {
@@ -40,8 +40,10 @@ const newsData = [
 ];
 
 export default function NewsSection() {
+  const [selectedNews, setSelectedNews] = useState(null);
+
   return (
-    <section className="news-section container">
+    <section id="news-section" className="news-section container">
       <div className="news-section-header">
         <h2>
           <svg className="fire-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -53,7 +55,7 @@ export default function NewsSection() {
       
       <div className="news-grid">
         {newsData.map(news => (
-          <div key={news.id} className={`news-card ${news.featured ? 'featured' : ''}`}>
+          <div key={news.id} className={`news-card ${news.featured ? 'featured' : ''}`} onClick={() => setSelectedNews(news)}>
             <div 
               className="news-image" 
               style={{ background: news.gradient }}
@@ -77,12 +79,36 @@ export default function NewsSection() {
               <p className="news-excerpt">{news.excerpt}</p>
               <div className="news-footer">
                 <span className="news-source">{news.source}</span>
-                <span className="news-read-more">Read Full Story →</span>
+                <span className="news-read-more" onClick={(e) => { e.stopPropagation(); setSelectedNews(news); }}>Read Full Story →</span>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {selectedNews && (
+        <div className="news-modal-overlay" onClick={() => setSelectedNews(null)}>
+          <div className="news-modal" onClick={e => e.stopPropagation()}>
+            <button className="news-modal-close" onClick={() => setSelectedNews(null)}>×</button>
+            <div className="news-modal-date">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              {selectedNews.date}
+            </div>
+            <h2 className="news-modal-title" style={{ color: selectedNews.featured ? 'var(--red)' : 'var(--text-primary)' }}>
+              {selectedNews.title}
+            </h2>
+            <div className="news-modal-content">
+              {selectedNews.excerpt}
+              <br/><br/>
+              <em>This is a full story preview based on the excerpt. In a real environment, the complete article body would be fetched from the database or API.</em>
+            </div>
+            <div className="news-modal-source">Source: {selectedNews.source}</div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
