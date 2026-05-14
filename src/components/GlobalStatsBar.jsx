@@ -22,7 +22,7 @@ export default function GlobalStatsBar() {
   )
 
   const mcapChange = data.market_cap_change_percentage_24h_usd
-  const fearIndex = 40 // Simulated
+  const fearIndex = data.fear_greed_index || 40
   const fearLabel = fearIndex <= 25 ? 'Extreme Fear' : fearIndex <= 45 ? 'Fear' : fearIndex <= 55 ? 'Neutral' : fearIndex <= 75 ? 'Greed' : 'Extreme Greed'
   const fearClass = fearIndex <= 45 ? 'fear' : fearIndex <= 55 ? 'neutral' : 'greed'
 

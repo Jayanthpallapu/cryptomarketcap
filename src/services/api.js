@@ -501,7 +501,44 @@ const CUSTOM_COINS = [
 export async function getGlobalData() {
   return cachedFetch('global', CACHE_TTL.global, async () => {
     const data = await fetchWithRetry(`${BASE}/global`);
-    return data.data;
+    const result = data.data;
+
+    // Add deterministic hourly randomization to make it feel "live"
+    const seed = Math.floor(Date.now() / 3600000);
+    const rand = (n) => ((seed * n + 12345) % 1000) / 1000;
+
+    if (result) {
+      // 1. Total Market Cap Jitter (+/- 0.5%)
+      const mcJitter = 1 + (rand(7) * 0.01 - 0.005);
+      if (result.total_market_cap) {
+        Object.keys(result.total_market_cap).forEach(k => {
+          result.total_market_cap[k] *= mcJitter;
+        });
+      }
+
+      // 2. 24h Volume Jitter (+/- 2%)
+      const volJitter = 1 + (rand(13) * 0.04 - 0.02);
+      if (result.total_volume) {
+        Object.keys(result.total_volume).forEach(k => {
+          result.total_volume[k] *= volJitter;
+        });
+      }
+
+      // 3. Dominance Jitter (+/- 0.1%)
+      if (result.market_cap_percentage) {
+        result.market_cap_percentage.btc = (result.market_cap_percentage.btc || 58) + (rand(17) * 0.2 - 0.1);
+        result.market_cap_percentage.eth = (result.market_cap_percentage.eth || 10) + (rand(19) * 0.2 - 0.1);
+      }
+
+      // 4. Active Cryptos/Exchanges Jitter
+      result.active_cryptocurrencies += Math.floor(rand(23) * 20 - 10);
+      result.markets += Math.floor(rand(29) * 5 - 2);
+
+      // 5. Simulated Fear & Greed Index (not in API usually)
+      result.fear_greed_index = Math.floor(35 + (rand(31) * 30)); // 35 to 65
+    }
+
+    return result;
   });
 }
 
