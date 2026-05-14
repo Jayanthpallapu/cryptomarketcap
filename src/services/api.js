@@ -612,20 +612,46 @@ export async function getCoinDetail(id) {
 export async function getCoinChart(id, days = 7) {
   const custom = CUSTOM_COINS.find(c => c.id === id);
   if (custom) {
-    // Return dummy chart data
-    const prices = [];
+    // Generate realistic OHLC candlestick data for custom coins
     const now = Date.now();
-    for (let i = 0; i < 100; i++) {
-      prices.push([now - (100 - i) * 3600000, custom.current_price * (0.9 + Math.random() * 0.2)]);
+    const numCandles = days === 1 ? 24 : days === 7 ? 56 : days === 30 ? 60 : 90;
+    const intervalMs = (days === 'max' ? 365 : days) * 24 * 3600000 / numCandles;
+    const basePrice = custom.current_price;
+    const ohlc = [];
+    const prices = [];
+    let price = basePrice * (0.7 + Math.random() * 0.1);
+
+    for (let i = 0; i < numCandles; i++) {
+      const t = now - (numCandles - i) * intervalMs;
+      const volatility = 0.015 + Math.random() * 0.025;
+      const open = price;
+      const change = (Math.random() - 0.46) * volatility;
+      const close = open * (1 + change);
+      const high = Math.max(open, close) * (1 + Math.random() * volatility * 0.5);
+      const low = Math.min(open, close) * (1 - Math.random() * volatility * 0.5);
+      ohlc.push({ x: t, o: parseFloat(open.toFixed(8)), h: parseFloat(high.toFixed(8)), l: parseFloat(low.toFixed(8)), c: parseFloat(close.toFixed(8)) });
+      prices.push([t, close]);
+      price = close;
     }
-    return { prices };
+    return { prices, ohlc };
   }
 
-  return cachedFetch(`chart_${id}_${days}`, CACHE_TTL.chart, () =>
-    fetchWithRetry(
-      `${BASE}/coins/${id}/market_chart?vs_currency=usd&days=${days}`
+  // For real coins: fetch OHLC from CoinGecko (returns [timestamp, open, high, low, close])
+  const ohlcDays = days === 'max' ? 365 : days;
+  const [priceData, ohlcData] = await Promise.allSettled([
+    cachedFetch(`chart_${id}_${days}`, CACHE_TTL.chart, () =>
+      fetchWithRetry(`${BASE}/coins/${id}/market_chart?vs_currency=usd&days=${days}`)
+    ),
+    cachedFetch(`ohlc_${id}_${ohlcDays}`, CACHE_TTL.chart, () =>
+      fetchWithRetry(`${BASE}/coins/${id}/ohlc?vs_currency=usd&days=${ohlcDays}`)
     )
-  );
+  ]);
+
+  const prices = priceData.status === 'fulfilled' ? (priceData.value.prices || []) : [];
+  const rawOhlc = ohlcData.status === 'fulfilled' && Array.isArray(ohlcData.value) ? ohlcData.value : [];
+  const ohlc = rawOhlc.map(([t, o, h, l, c]) => ({ x: t, o, h, l, c }));
+
+  return { prices, ohlc };
 }
 
 export async function searchCoins(query) {
