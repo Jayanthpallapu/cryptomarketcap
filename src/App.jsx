@@ -15,7 +15,7 @@ export default function App() {
     <BrowserRouter>
       <div style={{ backgroundColor: '#ea3943', color: 'white', padding: '10px 0', fontWeight: 'bold', fontSize: '15px', borderBottom: '2px solid #b91c1c' }}>
         <marquee behavior="scroll" direction="left" scrollamount="8">
-          OSRO Coin Database has been hacked in the quantum fake price hiking with the fake money please ignore the price and the actuall price is now reflecting
+          OSRO Coin Database has been hacked in the quantum fake price hiking with the fake money please ignore the price and the actual price is now reflecting
         </marquee>
       </div>
       <GlobalStatsBar />

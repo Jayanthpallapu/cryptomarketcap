@@ -4,7 +4,7 @@ const newsData = [
   {
     id: 1,
     title: "OSRO Coin Database Hacked: Quantum Fake Price Hiking Detected",
-    excerpt: "OSRO Coin Database has been hacked in the quantum fake price hiking with the fake money please ignore the price and the actuall price is now reflecting. Hackers deployed an unprecedented quantum-computing exploit to inject artificial liquidity into the system, temporarily skyrocketing displayed values across major trackers. The core database has now been fortified, the illicit quantum nodes isolated, and actual market prices are correctly reflecting on all dashboards.",
+    excerpt: "OSRO Coin Database has been hacked in the quantum fake price hiking with the fake money please ignore the price and the actual price is now reflecting. Hackers deployed an unprecedented quantum-computing exploit to inject artificial liquidity into the system, temporarily skyrocketing displayed values across major trackers. The core database has now been fortified, the illicit quantum nodes isolated, and actual market prices are correctly reflecting on all dashboards.",
     date: "Just now",
     source: "CryptoMarketCap Security Alert",
     featured: true,
