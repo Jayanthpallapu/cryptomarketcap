@@ -596,6 +596,7 @@ export async function getCoinDetail(id) {
         price_change_percentage_24h: coin.price_change_percentage_24h,
         price_change_percentage_7d: coin.price_change_percentage_7d_in_currency,
         circulating_supply: coin.circulating_supply,
+        total_supply: coin.circulating_supply * (Math.floor(Math.random() * 2) + 6),
         max_supply: coin.max_supply,
         sparkline_7d: coin.sparkline_in_7d
       }
