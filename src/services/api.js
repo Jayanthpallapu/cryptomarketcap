@@ -68,42 +68,34 @@ async function cachedFetch(cacheKey, ttl, fetchFn) {
 // ─── API Functions ──────────────────────────────────────────────────
 
 // Oil Lab constants
-const OILLAB_START_PRICE = 0.05625;
-const OILLAB_START_TIME = new Date('2026-05-13T08:54:56+05:30').getTime();
+const OILLAB_START_PRICE = 0.13;
+const OILLAB_START_TIME = Date.now();
 
 function getOilLabMetrics() {
   const now = Date.now();
   const ONE_HOUR_MS = 60 * 60 * 1000;
-  const t24hAgo = now - 24 * ONE_HOUR_MS;
-  const t7dAgo = now - 7 * 24 * ONE_HOUR_MS;
 
   const computeHourChange = (timestamp) => {
     const seed = Math.floor(timestamp / 10000);
     const rand = ((seed * 1357 + 2468) % 233280) / 233280;
-    // User requested: -2.57% to -3.07% randomly
-    return parseFloat((-3.07 + (rand * (-2.57 - -3.07))).toFixed(2));
+    // User requested: 1.05% to 2.76% randomly increase
+    return parseFloat((1.05 + (rand * (2.76 - 1.05))).toFixed(2));
   };
 
   let price = OILLAB_START_PRICE;
-  let price24hAgo = OILLAB_START_PRICE;
-  let price7dAgo = OILLAB_START_PRICE;
-
-  // Calculate price accumulation since start time
+  
   for (let t = OILLAB_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
     const change = computeHourChange(t);
     price *= (1 + change / 100);
-    
-    if (t + ONE_HOUR_MS <= t24hAgo) price24hAgo = price;
-    if (t + ONE_HOUR_MS <= t7dAgo) price7dAgo = price;
   }
 
   const change1h = computeHourChange(now);
   price *= (1 + change1h / 100);
-  const currentPrice = parseFloat(price.toFixed(5));
+  const currentPrice = parseFloat(price.toFixed(4));
 
-  // Calculate 24h and 7d changes based on historical accumulation
-  const change24h = parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2));
-  const change7d = parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2));
+  // Calculate realistic 24h and 7d changes based on the new positive trend
+  const change24h = parseFloat((45.2 + change1h).toFixed(2));
+  const change7d = parseFloat((315.4 + change1h).toFixed(2));
 
   return { price: currentPrice, change1h, change24h, change7d };
 }
@@ -247,44 +239,38 @@ function getBlackRockMetrics() {
 
 
 // OSRO constants
-const OSRO_START_PRICE = 0.65;
-const OSRO_LIVE_TIME = new Date('2026-05-14T08:20:00+05:30').getTime();
-const OSRO_PHASE2_TIME = new Date('2026-05-14T10:00:00+05:30').getTime();
+const OSRO_START_PRICE = 1.02;
+const OSRO_START_TIME = Date.now();
 
 function getOSROMetrics() {
   const now = Date.now();
   const ONE_HOUR_MS = 60 * 60 * 1000;
 
   const computeHourChange = (timestamp) => {
-    if (timestamp < OSRO_PHASE2_TIME) {
-      return 25400; // 25.4k%
-    } else {
-      const seed = Math.floor(timestamp / 10000);
-      const rand = ((seed * 3333 + 7777) % 233280) / 233280;
-      // 0.3K% to 0.67K% -> 300% to 670%
-      return parseFloat((300 + (rand * (670 - 300))).toFixed(2));
-    }
+    const seed = Math.floor(timestamp / 10000);
+    const rand = ((seed * 3333 + 7777) % 233280) / 233280;
+    // Drastically reduced 1h % change to show correction (e.g. -2.15% to -5.45%)
+    return parseFloat((-5.45 + (rand * (-2.15 - -5.45))).toFixed(2));
   };
 
   let price = OSRO_START_PRICE;
-  let change1h = 25400;
-
-  if (now >= OSRO_LIVE_TIME) {
-    for (let t = OSRO_LIVE_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
-      const change = computeHourChange(t);
-      price *= (1 + change / 100);
-    }
-    change1h = computeHourChange(now);
-    price *= (1 + change1h / 100);
-  } else {
-    change1h = 25400;
+  
+  for (let t = OSRO_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t);
+    price *= (1 + change / 100);
   }
 
-  const change24h = parseFloat((14300 + change1h).toFixed(2));
-  const change7d = parseFloat((94600 + change1h).toFixed(2));
+  const change1h = computeHourChange(now);
+  price *= (1 + change1h / 100);
+  
+  const currentPrice = parseFloat(price.toFixed(4));
+
+  // The 24h and 7d percentages are also reduced to normal numbers
+  const change24h = parseFloat((-18.5 + change1h).toFixed(2));
+  const change7d = parseFloat((-8.4 + change1h).toFixed(2));
 
   return { 
-    price: parseFloat(price.toFixed(4)), 
+    price: currentPrice, 
     change1h, 
     change24h, 
     change7d 

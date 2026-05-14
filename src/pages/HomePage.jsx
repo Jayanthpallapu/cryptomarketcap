@@ -1,4 +1,5 @@
 import CoinTable from '../components/CoinTable'
+import NewsSection from '../components/NewsSection'
 
 export default function HomePage() {
   return (
@@ -9,6 +10,8 @@ export default function HomePage() {
         </h1>
         <CoinTable />
       </section>
+      
+      <NewsSection />
     </div>
   )
 }

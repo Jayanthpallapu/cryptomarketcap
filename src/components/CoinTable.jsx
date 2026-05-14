@@ -195,7 +195,7 @@ export default function CoinTable() {
                     <td className={`star-cell ${favorites.includes(coin.id) ? 'favorited' : ''}`} onClick={e => toggleFav(e, coin.id)}>
                       {favorites.includes(coin.id) ? '★' : '☆'}
                     </td>
-                    <td className="rank-cell">{coin.market_cap_rank || '-'}</td>
+                    <td className="rank-cell">{activeTab === 'all' ? (page - 1) * perPage + index + 1 : index + 1}</td>
                     <td>
                       <Link to={`/coin/${coin.id}`} style={{display:'flex',alignItems:'center',gap:12}}>
                         <div className="coin-name-cell">
