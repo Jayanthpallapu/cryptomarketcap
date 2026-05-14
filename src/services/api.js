@@ -571,6 +571,11 @@ export async function getCoinDetail(id) {
   const custom = CUSTOM_COINS.find(c => c.id === id);
   if (custom) {
     const coin = { ...custom }; // Capture values once
+    const chartData = await getCoinChart(id, 'max');
+    const ohlc = chartData.ohlc || [];
+    const ath = ohlc.length > 0 ? Math.max(...ohlc.map(d => d.h)) : coin.current_price * 1.1;
+    const atl = ohlc.length > 0 ? Math.min(...ohlc.map(d => d.l)) : coin.current_price * 0.9;
+
     return {
       ...coin,
       description: { 
@@ -598,6 +603,8 @@ export async function getCoinDetail(id) {
         circulating_supply: coin.circulating_supply,
         total_supply: coin.circulating_supply * (Math.floor(Math.random() * 2) + 6),
         max_supply: coin.max_supply,
+        ath: { usd: ath },
+        atl: { usd: atl },
         sparkline_7d: coin.sparkline_in_7d
       }
     };
