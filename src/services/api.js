@@ -67,6 +67,54 @@ async function cachedFetch(cacheKey, ttl, fetchFn) {
 
 // ─── API Functions ──────────────────────────────────────────────────
 
+// Musk Mini X constants
+const MUSKMINI_START_PRICE = 0.07496;
+const MUSKMINI_THRESHOLD = MUSKMINI_START_PRICE * 1.30; // 30% above start
+const MUSKMINI_START_TIME = new Date('2026-05-14T00:00:00+05:30').getTime();
+
+function getMuskMiniXMetrics() {
+  const now = Date.now();
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (timestamp, currentPrice) => {
+    const seed = Math.floor(timestamp / 10000);
+    const rand = ((seed * 6173 + 3141) % 233280) / 233280;
+    if (currentPrice < MUSKMINI_THRESHOLD) {
+      // Phase 1: 3.56% to 4.96% increase per hour
+      return parseFloat((3.56 + (rand * (4.96 - 3.56))).toFixed(2));
+    } else {
+      // Phase 2: once 30% gained, slow to 0.01% to 0.04%
+      return parseFloat((0.01 + (rand * (0.04 - 0.01))).toFixed(2));
+    }
+  };
+
+  let price = MUSKMINI_START_PRICE;
+  let price24hAgo = MUSKMINI_START_PRICE;
+  let price7dAgo = MUSKMINI_START_PRICE;
+  const t24hAgo = now - 24 * ONE_HOUR_MS;
+  const t7dAgo = now - 7 * 24 * ONE_HOUR_MS;
+
+  for (let t = MUSKMINI_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t, price);
+    price *= (1 + change / 100);
+    if (t + ONE_HOUR_MS <= t24hAgo) price24hAgo = price;
+    if (t + ONE_HOUR_MS <= t7dAgo) price7dAgo = price;
+  }
+
+  const change1h = computeHourChange(now, price);
+  price *= (1 + change1h / 100);
+  const currentPrice = parseFloat(price.toFixed(5));
+
+  const change24h = price24hAgo !== MUSKMINI_START_PRICE
+    ? parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2))
+    : 34.6;
+  const change7d = price7dAgo !== MUSKMINI_START_PRICE
+    ? parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2))
+    : 76.0;
+
+  return { price: currentPrice, change1h, change24h, change7d };
+}
+
 // Oil Lab constants
 const OILLAB_START_PRICE = 0.13;
 const OILLAB_START_TIME = Date.now();
@@ -433,6 +481,32 @@ const CUSTOM_COINS = [
     max_supply: 100000000,
     sparkline_in_7d: {
       price: [1.2, 1.8, 2.5, 3.2, 3.8, 4.0, 4.12]
+    }
+  },
+  {
+    id: 'musk-mini-x',
+    symbol: 'mmx',
+    name: 'Musk Mini X',
+    image: '/musk_mini_x.png',
+    get current_price() {
+      return getMuskMiniXMetrics().price;
+    },
+    market_cap: 7496000,
+    market_cap_rank: 8,
+    total_volume: 950000,
+    get price_change_percentage_1h_in_currency() {
+      return getMuskMiniXMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getMuskMiniXMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getMuskMiniXMetrics().change7d;
+    },
+    circulating_supply: 100000000,
+    max_supply: 1000000000,
+    sparkline_in_7d: {
+      price: [0.03, 0.04, 0.05, 0.055, 0.06, 0.065, 0.07496]
     }
   }
 ];
