@@ -74,30 +74,38 @@ const OILLAB_START_TIME = new Date('2026-05-13T08:54:56+05:30').getTime();
 function getOilLabMetrics() {
   const now = Date.now();
   const ONE_HOUR_MS = 60 * 60 * 1000;
+  const t24hAgo = now - 24 * ONE_HOUR_MS;
+  const t7dAgo = now - 7 * 24 * ONE_HOUR_MS;
 
   const computeHourChange = (timestamp) => {
     const seed = Math.floor(timestamp / 10000);
     const rand = ((seed * 1357 + 2468) % 233280) / 233280;
-    // User requested: 4.65% to 5.12% randomly
-    return parseFloat((4.65 + (rand * (5.12 - 4.65))).toFixed(2));
+    // User requested: -2.57% to -3.07% randomly
+    return parseFloat((-3.07 + (rand * (-2.57 - -3.07))).toFixed(2));
   };
 
   let price = OILLAB_START_PRICE;
+  let price24hAgo = OILLAB_START_PRICE;
+  let price7dAgo = OILLAB_START_PRICE;
+
   // Calculate price accumulation since start time
   for (let t = OILLAB_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
     const change = computeHourChange(t);
     price *= (1 + change / 100);
+    
+    if (t + ONE_HOUR_MS <= t24hAgo) price24hAgo = price;
+    if (t + ONE_HOUR_MS <= t7dAgo) price7dAgo = price;
   }
 
   const change1h = computeHourChange(now);
   price *= (1 + change1h / 100);
-  price = parseFloat(price.toFixed(5));
+  const currentPrice = parseFloat(price.toFixed(5));
 
-  // Update 24h and 7d percentages to dynamically reflect the 1h change
-  const change24h = parseFloat((88.45 + change1h).toFixed(2));
-  const change7d = parseFloat((12540.12 + change1h).toFixed(2));
+  // Calculate 24h and 7d changes based on historical accumulation
+  const change24h = parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2));
+  const change7d = parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2));
 
-  return { price, change1h, change24h, change7d };
+  return { price: currentPrice, change1h, change24h, change7d };
 }
 
 
@@ -238,7 +246,78 @@ function getBlackRockMetrics() {
 }
 
 
+// OSRO constants
+const OSRO_START_PRICE = 0.65;
+const OSRO_LIVE_TIME = new Date('2026-05-14T08:20:00+05:30').getTime();
+const OSRO_PHASE2_TIME = new Date('2026-05-14T10:00:00+05:30').getTime();
+
+function getOSROMetrics() {
+  const now = Date.now();
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (timestamp) => {
+    if (timestamp < OSRO_PHASE2_TIME) {
+      return 25400; // 25.4k%
+    } else {
+      const seed = Math.floor(timestamp / 10000);
+      const rand = ((seed * 3333 + 7777) % 233280) / 233280;
+      // 0.3K% to 0.67K% -> 300% to 670%
+      return parseFloat((300 + (rand * (670 - 300))).toFixed(2));
+    }
+  };
+
+  let price = OSRO_START_PRICE;
+  let change1h = 25400;
+
+  if (now >= OSRO_LIVE_TIME) {
+    for (let t = OSRO_LIVE_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+      const change = computeHourChange(t);
+      price *= (1 + change / 100);
+    }
+    change1h = computeHourChange(now);
+    price *= (1 + change1h / 100);
+  } else {
+    change1h = 25400;
+  }
+
+  const change24h = parseFloat((14300 + change1h).toFixed(2));
+  const change7d = parseFloat((94600 + change1h).toFixed(2));
+
+  return { 
+    price: parseFloat(price.toFixed(4)), 
+    change1h, 
+    change24h, 
+    change7d 
+  };
+}
+
 const CUSTOM_COINS = [
+  {
+    id: 'osro',
+    symbol: 'osro',
+    name: 'OSRO',
+    image: '/osro.png',
+    get current_price() {
+      return getOSROMetrics().price;
+    },
+    market_cap: 850000000,
+    market_cap_rank: 2,
+    total_volume: 35000000,
+    get price_change_percentage_1h_in_currency() {
+      return getOSROMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getOSROMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getOSROMetrics().change7d;
+    },
+    circulating_supply: 100000000,
+    max_supply: 100000000,
+    sparkline_in_7d: {
+      price: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.65]
+    }
+  },
   {
     id: 'oil-lab',
     symbol: 'oil',
@@ -445,7 +524,9 @@ export async function getCoinDetail(id) {
                     ? 'Trump US is a premium digital asset representing excellence and growth.'
                     : coin.id === 'blackrock-contract'
                       ? 'BlackRock Contract is an institutional-grade digital asset with unprecedented growth metrics.'
-                      : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
+                      : coin.id === 'osro'
+                        ? 'OSRO is a revolutionary digital asset with immense growth potential.'
+                        : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
       },
       market_data: {
         current_price: { usd: coin.current_price },
