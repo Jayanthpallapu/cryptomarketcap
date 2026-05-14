@@ -120,66 +120,60 @@ function getMuskMiniXMetrics(timestamp = Date.now()) {
 const OILLAB_START_PRICE = 0.13;
 const OILLAB_START_TIME = Date.now();
 
-function getOilLabMetrics() {
-  const now = Date.now();
+function getOilLabMetrics(timestamp = Date.now()) {
   const ONE_HOUR_MS = 60 * 60 * 1000;
 
-  const computeHourChange = (timestamp) => {
-    const seed = Math.floor(timestamp / 10000);
+  const computeHourChange = (t) => {
+    const seed = Math.floor(t / 3600000);
     const rand = ((seed * 1357 + 2468) % 233280) / 233280;
-    // User requested: 1.05% to 2.76% randomly increase
     return parseFloat((1.05 + (rand * (2.76 - 1.05))).toFixed(2));
   };
 
   let price = OILLAB_START_PRICE;
-  
-  for (let t = OILLAB_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+  for (let t = OILLAB_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
     const change = computeHourChange(t);
     price *= (1 + change / 100);
   }
 
-  const change1h = computeHourChange(now);
-  price *= (1 + change1h / 100);
+  const change1h = computeHourChange(timestamp);
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
   const currentPrice = parseFloat(price.toFixed(4));
-
-  // Calculate realistic 24h and 7d changes based on the new positive trend
   const change24h = parseFloat((45.2 + change1h).toFixed(2));
   const change7d = parseFloat((315.4 + change1h).toFixed(2));
 
   return { price: currentPrice, change1h, change24h, change7d };
 }
 
-
-
 // Baby Trump constants
 const BABYTRUMP_START_PRICE = 8.016;
 const BABYTRUMP_START_TIME = Date.now();
 
-function getBabyTrumpMetrics() {
-  const now = Date.now();
+function getBabyTrumpMetrics(timestamp = Date.now()) {
   const ONE_HOUR_MS = 60 * 60 * 1000;
 
-  const computeHourChange = (timestamp) => {
-    const seed = Math.floor(timestamp / 10000);
+  const computeHourChange = (t) => {
+    const seed = Math.floor(t / 3600000);
     const rand = ((seed * 5432 + 9876) % 233280) / 233280;
     return parseFloat((2.03 + (rand * (3.03 - 2.03))).toFixed(2));
   };
 
   let price = BABYTRUMP_START_PRICE;
-  for (let t = BABYTRUMP_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+  for (let t = BABYTRUMP_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
     const change = computeHourChange(t);
     price *= (1 + change / 100);
   }
 
-  const change1h = computeHourChange(now);
-  
-  price *= (1 + change1h / 100);
-  price = parseFloat(price.toFixed(4));
+  const change1h = computeHourChange(timestamp);
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
+  const currentPrice = parseFloat(price.toFixed(4));
+  const change24h = parseFloat((4.5 + change1h).toFixed(2));
+  const change7d = parseFloat((12.4 + change1h).toFixed(2));
 
-  const change24h = parseFloat((2420 + change1h).toFixed(2));
-  const change7d = parseFloat((2420 + change1h).toFixed(2));
-
-  return { price, change1h, change24h, change7d };
+  return { price: currentPrice, change1h, change24h, change7d };
 }
 
 // trump tmp constants
@@ -187,41 +181,29 @@ const TRUMPTMP_START_PRICE = 13.98;
 // Start from 6:30 AM IST on May 11, 2026
 const TRUMPTMP_START_TIME = new Date('2026-05-12T13:58:00+05:30').getTime();
 
-function getTrumpTMPMetrics() {
-  const now = Date.now();
+function getTrumpTMPMetrics(timestamp = Date.now()) {
   const ONE_HOUR_MS = 60 * 60 * 1000;
-  const t24hAgo = now - 24 * ONE_HOUR_MS;
-  const t7dAgo = now - 7 * 24 * ONE_HOUR_MS;
 
-  const getDynamicChange = (timestamp) => {
-    const seed = Math.floor(timestamp / 10000);
-    const rand = ((seed * 3456 + 7890) % 233280) / 233280;
-    // Randomly negative between 2.45% and 0.76%
-    return parseFloat((-2.45 + (rand * (2.45 - 0.76))).toFixed(2));
+  const computeHourChange = (t) => {
+    const seed = Math.floor(t / 3600000);
+    const rand = ((seed * 2468 + 1357) % 233280) / 233280;
+    // -2.45% and 0.76% (randomly decrease)
+    return parseFloat((-2.45 + (rand * (0.76 - -2.45))).toFixed(2));
   };
 
   let price = TRUMPTMP_START_PRICE;
-  let price24hAgo = TRUMPTMP_START_PRICE;
-  let price7dAgo = TRUMPTMP_START_PRICE;
-
-  // Accumulate price changes since start
-  for (let t = TRUMPTMP_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
-    const change = getDynamicChange(t);
+  for (let t = TRUMPTMP_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t);
     price *= (1 + change / 100);
-    
-    if (t + ONE_HOUR_MS <= t24hAgo) price24hAgo = price;
-    if (t + ONE_HOUR_MS <= t7dAgo) price7dAgo = price;
   }
 
-  const change1h = parseFloat((0.08 + Math.random() * (0.19 - 0.08)).toFixed(2));
-  
-  // Apply current hour's change to the final price
-  price *= (1 + change1h / 100);
-  const currentPrice = parseFloat(price.toFixed(4));
-
-  // Calculate 24h and 7d changes based on historical accumulation
-  const change24h = parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2));
-  const change7d = parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2));
+  const change1h = computeHourChange(timestamp);
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
+  const currentPrice = parseFloat(price.toFixed(2));
+  const change24h = parseFloat((-5.8 + change1h).toFixed(2));
+  const change7d = parseFloat((-14.2 + change1h).toFixed(2));
 
   return { price: currentPrice, change1h, change24h, change7d };
 }
@@ -230,60 +212,62 @@ function getTrumpTMPMetrics() {
 const TRUMPUS_START_PRICE = 3.25;
 const TRUMPUS_START_TIME = Date.now();
 
-function getTrumpUSMetrics() {
-  const now = Date.now();
+function getTrumpUSMetrics(timestamp = Date.now()) {
   const ONE_HOUR_MS = 60 * 60 * 1000;
 
-  const computeHourChange = (timestamp) => {
-    const seed = Math.floor(timestamp / 10000);
+  const computeHourChange = (t) => {
+    const seed = Math.floor(t / 3600000);
     const rand = ((seed * 2345 + 6789) % 233280) / 233280;
-    // Random between 0.33% and 1.08%
     return parseFloat((0.33 + (rand * (1.08 - 0.33))).toFixed(2));
   };
 
   let price = TRUMPUS_START_PRICE;
-  for (let t = TRUMPUS_START_TIME; t + ONE_HOUR_MS <= now; t += ONE_HOUR_MS) {
+  for (let t = TRUMPUS_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
     const change = computeHourChange(t);
     price *= (1 + change / 100);
   }
 
-  const change1h = computeHourChange(now);
-  
-  price *= (1 + change1h / 100);
-  price = parseFloat(price.toFixed(4));
-
+  const change1h = computeHourChange(timestamp);
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
+  const currentPrice = parseFloat(price.toFixed(4));
   const change24h = parseFloat((55 + change1h).toFixed(2));
   const change7d = parseFloat((675 + change1h).toFixed(2));
 
-  return { price, change1h, change24h, change7d };
+  return { price: currentPrice, change1h, change24h, change7d };
 }
 
 // BlackRock Contract constants
 const BLACKROCK_TARGET_TIME = new Date('2026-05-13T15:00:00+05:30').getTime();
 
-function getBlackRockMetrics() {
-  const now = Date.now();
+function getBlackRockMetrics(timestamp = Date.now()) {
+  const ONE_HOUR_MS = 60 * 60 * 1000;
 
-  const computeHourChange = (timestamp) => {
-    const seed = Math.floor(timestamp / 10000);
-    const rand = ((seed * 7890 + 1234) % 233280) / 233280;
-    // Generate a dynamic percentage change
-    return parseFloat((1.15 + (rand * (2.45 - 1.15))).toFixed(2));
+  const computeHourChange = (t) => {
+    const seed = Math.floor(t / 3600000);
+    const rand = ((seed * 8765 + 4321) % 233280) / 233280;
+    return parseFloat((0.85 + (rand * (1.45 - 0.85))).toFixed(2));
   };
 
-  const change1h = computeHourChange(now);
-  
-  // Price is 6.32, but becomes 7.03 at 3 PM IST
-  let price = now >= BLACKROCK_TARGET_TIME ? 7.03 : 6.32;
-  
-  // Apply dynamic 1h change to the price to keep it active
-  price *= (1 + change1h / 100);
-  
-  // Add up the 1 hr % change to 24 hrs & 7 Days
-  const change24h = parseFloat((1300 + change1h).toFixed(2));
-  const change7d = parseFloat((2300000 + change1h).toFixed(2));
+  let startPrice = timestamp >= BLACKROCK_TARGET_TIME ? 7.03 : 6.32;
+  let price = startPrice;
+  const startTime = timestamp >= BLACKROCK_TARGET_TIME ? BLACKROCK_TARGET_TIME : (timestamp - 7 * 24 * ONE_HOUR_MS);
 
-  return { price: parseFloat(price.toFixed(2)), change1h, change24h, change7d };
+  for (let t = startTime; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t);
+    price *= (1 + change / 100);
+  }
+
+  const change1h = computeHourChange(timestamp);
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
+  const currentPrice = parseFloat(price.toFixed(2));
+  const change24h = parseFloat((12.5 + change1h).toFixed(2));
+  const change7d = parseFloat((85.2 + change1h).toFixed(2));
+
+  return { price: currentPrice, change1h, change24h, change7d };
 }
 
 
