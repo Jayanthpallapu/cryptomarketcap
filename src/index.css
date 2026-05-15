@@ -169,7 +169,9 @@ table { border-collapse: collapse; width: 100%; }
 .chart-timeframes button { padding: 6px 14px; font-size: 13px; font-weight: 500; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm); transition: var(--transition); cursor: pointer; }
 .chart-timeframes button:hover { color: var(--text-primary); }
 .chart-timeframes button.active { color: var(--accent-blue); background: rgba(56,97,251,0.1); border-color: rgba(56,97,251,0.3); }
-.chart-area { height: 350px; position: relative; }
+.chart-area { min-height: 580px; position: relative; margin-top: 10px; }
+.apexcharts-canvas { margin: 0 auto; }
+.apexcharts-toolbar { top: -35px !important; right: 0 !important; }
 
 /* ===== TRENDING SECTION ===== */
 .trending-section { padding: 20px 0; }
@@ -275,6 +277,25 @@ table { border-collapse: collapse; width: 100%; }
 }
 
 /* ===== MISC ANIMATIONS ===== */
+/* ===== PRO CHART ===== */
+.pro-chart {
+  padding: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+.chart-type-btn {
+  transition: var(--transition);
+  font-weight: 600;
+}
+.chart-type-btn:hover {
+  background: var(--bg-hover) !important;
+}
+.chart-type-btn.active {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .fade-in { animation: fadeIn 0.3s ease forwards; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }

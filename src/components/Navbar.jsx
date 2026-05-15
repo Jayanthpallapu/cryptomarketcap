@@ -69,19 +69,7 @@ export default function Navbar() {
           <div className={isActive('/trending')}>
             <Link to="/trending">Trending</Link>
           </div>
-          <div className="nav-item" onClick={() => {
-            const el = document.getElementById('news-section');
-            if (el) {
-              el.scrollIntoView({ behavior: 'smooth' });
-            } else {
-              navigate('/');
-              setTimeout(() => {
-                document.getElementById('news-section')?.scrollIntoView({ behavior: 'smooth' });
-              }, 100);
-            }
-          }}>
-            News
-          </div>
+
           <div className="nav-item">
             Learn
             <div className="nav-dropdown">

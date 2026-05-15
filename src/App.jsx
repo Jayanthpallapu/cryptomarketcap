@@ -9,15 +9,12 @@ import TrendingPage from './pages/TrendingPage'
 import WatchlistPage from './pages/WatchlistPage'
 import GainersLosersPage from './pages/GainersLosersPage'
 import NewCoinsPage from './pages/NewCoinsPage'
+import NewsPage from './pages/NewsPage'
 
 export default function App() {
   return (
     <BrowserRouter>
-      <div style={{ backgroundColor: '#ea3943', color: 'white', padding: '10px 0', fontWeight: 'bold', fontSize: '15px', borderBottom: '2px solid #b91c1c' }}>
-        <marquee behavior="scroll" direction="left" scrollamount="8">
-          OSRO Coin Database has been hacked in the quantum fake price hiking with the fake money please ignore the price and the actual price is now reflecting
-        </marquee>
-      </div>
+
       <GlobalStatsBar />
       <Navbar />
       <main style={{ minHeight: '60vh' }}>
@@ -29,6 +26,7 @@ export default function App() {
           <Route path="/watchlist" element={<WatchlistPage />} />
           <Route path="/gainers-losers" element={<GainersLosersPage />} />
           <Route path="/new" element={<NewCoinsPage />} />
+          <Route path="/news" element={<NewsPage />} />
         </Routes>
       </main>
       <Footer />

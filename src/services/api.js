@@ -271,6 +271,43 @@ function getBlackRockMetrics(timestamp = Date.now()) {
 }
 
 
+// China INU constants
+const CHINAINU_PRICE_BEFORE = 0.171;
+const CHINAINU_PRICE_AFTER  = 9.65;
+// Phase timestamps (IST = UTC+5:30)
+const CHINAINU_PUMP_TIME  = new Date('2026-05-16T10:00:00+05:30').getTime(); // 10 AM IST
+const CHINAINU_SETTLE_TIME = new Date('2026-05-16T11:00:00+05:30').getTime(); // 11 AM IST
+// % gain from 0.171 → 9.65
+const CHINAINU_PUMP_PCT = parseFloat((((CHINAINU_PRICE_AFTER - CHINAINU_PRICE_BEFORE) / CHINAINU_PRICE_BEFORE) * 100).toFixed(2)); // ≈ 5543.27%
+
+function getChinaINUMetrics(timestamp = Date.now()) {
+  if (timestamp < CHINAINU_PUMP_TIME) {
+    // Phase 1: pre-pump — static low price, existing big % history
+    return {
+      price: CHINAINU_PRICE_BEFORE,
+      change1h:  0.00,
+      change24h: 9000.00,
+      change7d:  9200.00
+    };
+  } else if (timestamp < CHINAINU_SETTLE_TIME) {
+    // Phase 2: pump window (10 AM–11 AM IST) — price jumped, 1h shows the spike
+    return {
+      price:     CHINAINU_PRICE_AFTER,
+      change1h:  CHINAINU_PUMP_PCT,   // ~5543%
+      change24h: 5600.00,
+      change7d:  9700.00
+    };
+  } else {
+    // Phase 3: post-settle (after 11 AM IST) — price stable, 1h locked at 0%
+    return {
+      price:     CHINAINU_PRICE_AFTER,
+      change1h:  0.00,
+      change24h: 5543.00,  // reflects 24h ago price was still $0.171
+      change7d:  9700.00
+    };
+  }
+}
+
 // OSRO constants
 const OSRO_START_PRICE = 1.02;
 const OSRO_START_TIME = Date.now();
@@ -286,7 +323,7 @@ function getOSROMetrics(timestamp = Date.now()) {
   };
 
   let price = OSRO_START_PRICE;
-  
+
   for (let t = OSRO_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
     const change = computeHourChange(t);
     price *= (1 + change / 100);
@@ -297,22 +334,48 @@ function getOSROMetrics(timestamp = Date.now()) {
   if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
     price *= (1 + change1h / 100);
   }
-  
+
   const currentPrice = parseFloat(price.toFixed(4));
 
   // The 24h and 7d percentages are also reduced to normal numbers
   const change24h = parseFloat((-18.5 + change1h).toFixed(2));
   const change7d = parseFloat((-8.4 + change1h).toFixed(2));
 
-  return { 
-    price: currentPrice, 
-    change1h, 
-    change24h, 
-    change7d 
+  return {
+    price: currentPrice,
+    change1h,
+    change24h,
+    change7d
   };
 }
 
 const CUSTOM_COINS = [
+  {
+    id: 'china-inu',
+    symbol: 'cinu',
+    name: 'China INU',
+    image: '/china_inu.png',
+    get current_price() {
+      return getChinaINUMetrics().price;
+    },
+    market_cap: 171000000,
+    market_cap_rank: 1,
+    total_volume: 28000000,
+    get price_change_percentage_1h_in_currency() {
+      return getChinaINUMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getChinaINUMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getChinaINUMetrics().change7d;
+    },
+    circulating_supply: 1000000000,
+    max_supply: 1000000000,
+    sparkline_in_7d: {
+      price: [0.0017, 0.005, 0.015, 0.04, 0.08, 0.13, 0.171]
+    }
+  },
   {
     id: 'osro',
     symbol: 'osro',
@@ -499,70 +562,96 @@ const CUSTOM_COINS = [
 ];
 
 export async function getGlobalData() {
-  return cachedFetch('global', CACHE_TTL.global, async () => {
+  const cached = getCached('global', CACHE_TTL.global);
+  if (cached) return cached;
+
+  const seed = Math.floor(Date.now() / 3600000);
+  const rand = (n) => ((seed * n + 12345) % 1000) / 1000;
+
+  try {
     const data = await fetchWithRetry(`${BASE}/global`);
     const result = data.data;
 
-    // Add deterministic hourly randomization to make it feel "live"
-    const seed = Math.floor(Date.now() / 3600000);
-    const rand = (n) => ((seed * n + 12345) % 1000) / 1000;
-
     if (result) {
-      // 1. Total Market Cap Jitter (+/- 0.5%)
       const mcJitter = 1 + (rand(7) * 0.01 - 0.005);
-      if (result.total_market_cap) {
-        Object.keys(result.total_market_cap).forEach(k => {
-          result.total_market_cap[k] *= mcJitter;
-        });
-      }
-
-      // 2. 24h Volume Jitter (+/- 2%)
+      if (result.total_market_cap) Object.keys(result.total_market_cap).forEach(k => { result.total_market_cap[k] *= mcJitter; });
       const volJitter = 1 + (rand(13) * 0.04 - 0.02);
-      if (result.total_volume) {
-        Object.keys(result.total_volume).forEach(k => {
-          result.total_volume[k] *= volJitter;
-        });
-      }
-
-      // 3. Dominance Jitter (+/- 0.1%)
+      if (result.total_volume) Object.keys(result.total_volume).forEach(k => { result.total_volume[k] *= volJitter; });
       if (result.market_cap_percentage) {
         result.market_cap_percentage.btc = (result.market_cap_percentage.btc || 58) + (rand(17) * 0.2 - 0.1);
         result.market_cap_percentage.eth = (result.market_cap_percentage.eth || 10) + (rand(19) * 0.2 - 0.1);
       }
-
-      // 4. Active Cryptos/Exchanges Jitter
       result.active_cryptocurrencies += Math.floor(rand(23) * 20 - 10);
       result.markets += Math.floor(rand(29) * 5 - 2);
-
-      // 5. Simulated Fear & Greed Index (not in API usually)
-      result.fear_greed_index = Math.floor(35 + (rand(31) * 30)); // 35 to 65
+      result.fear_greed_index = Math.floor(35 + (rand(31) * 30));
+      setCache('global', result);
+      return result;
     }
+  } catch (e) {
+    console.warn('CoinGecko global API unavailable, using fallback stats:', e.message);
+  }
 
-    return result;
-  });
+  // Realistic fallback when API is unreachable
+  const fallback = {
+    active_cryptocurrencies: 14800 + Math.floor(rand(23) * 20),
+    markets: 1100 + Math.floor(rand(29) * 5),
+    total_market_cap: { usd: 2.85e12 * (1 + rand(7) * 0.01 - 0.005) },
+    total_volume: { usd: 1.2e11 * (1 + rand(13) * 0.04 - 0.02) },
+    market_cap_percentage: {
+      btc: 57.8 + rand(17) * 0.2,
+      eth: 11.4 + rand(19) * 0.2
+    },
+    market_cap_change_percentage_24h_usd: -0.5 + rand(41) * 1.5,
+    fear_greed_index: Math.floor(35 + rand(31) * 30)
+  };
+  return fallback;
 }
 
 export async function getCoins(page = 1, perPage = 100, order = 'market_cap_desc') {
   const key = `coins_${page}_${perPage}_${order}`;
-  return cachedFetch(key, CACHE_TTL.coins, async () => {
+
+  // Check cache first
+  const cached = getCached(key, CACHE_TTL.coins);
+  if (cached) return cached;
+
+  if (page === 1) {
+    // Always return custom coins immediately, then try to merge real coins
+    try {
+      const data = await fetchWithRetry(
+        `${BASE}/coins/markets?vs_currency=usd&order=${order}&per_page=${perPage}&page=${page}&sparkline=true&price_change_percentage=1h,24h,7d`
+      );
+      if (Array.isArray(data)) {
+        const result = [...CUSTOM_COINS, ...data];
+        setCache(key, result);
+        return result;
+      }
+    } catch (e) {
+      console.warn('CoinGecko API unavailable, showing custom coins only:', e.message);
+    }
+    // Fallback: return just custom coins if API fails
+    return CUSTOM_COINS;
+  }
+
+  // For page > 1, try the real API
+  try {
     const data = await fetchWithRetry(
       `${BASE}/coins/markets?vs_currency=usd&order=${order}&per_page=${perPage}&page=${page}&sparkline=true&price_change_percentage=1h,24h,7d`
     );
-    
-    // Inject custom coins if on the first page
-    if (page === 1 && Array.isArray(data)) {
-      return [...CUSTOM_COINS, ...data];
+    if (Array.isArray(data)) {
+      setCache(key, data);
+      return data;
     }
-    
-    return data;
-  });
+  } catch (e) {
+    console.warn('CoinGecko API unavailable for page', page, e.message);
+  }
+  return [];
 }
 
 export async function getTrending() {
   return cachedFetch('trending', CACHE_TTL.trending, async () => {
     const data = await fetchWithRetry(`${BASE}/search/trending`);
     const coins = data.coins || [];
-    
+
     // Format custom coins for trending structure
     const customTrending = CUSTOM_COINS.map(coin => ({
       item: {
@@ -607,20 +696,22 @@ export async function getCoinDetail(id) {
         small: coin.image,
         large: coin.image
       },
-      description: { 
-        en: coin.id === 'oil-lab'
-            ? 'Oil Lab is a pioneering decentralized science (DeSci) token focused on optimizing energy extraction and sustainable oil research.'
-            : coin.id === 'baby-trump'
-              ? 'Baby Trump is a community-driven meme coin.'
-                : coin.id === 'trump-tmp'
-                  ? 'trump tmp is a high-performance presidential utility token.'
-                  : coin.id === 'trump-us'
-                    ? 'Trump US is a premium digital asset representing excellence and growth.'
-                    : coin.id === 'blackrock-contract'
-                      ? 'BlackRock Contract is an institutional-grade digital asset with unprecedented growth metrics.'
-                      : coin.id === 'osro'
-                        ? 'OSRO is a revolutionary digital asset with immense growth potential.'
-                        : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.' 
+      description: {
+        en: coin.id === 'china-inu'
+              ? 'China INU is a community-driven meme token inspired by Chinese culture and the viral Shiba Inu movement, combining Eastern heritage with the explosive energy of DeFi.'
+              : coin.id === 'oil-lab'
+          ? 'Oil Lab is a pioneering decentralized science (DeSci) token focused on optimizing energy extraction and sustainable oil research.'
+          : coin.id === 'baby-trump'
+            ? 'Baby Trump is a community-driven meme coin.'
+            : coin.id === 'trump-tmp'
+              ? 'trump tmp is a high-performance presidential utility token.'
+              : coin.id === 'trump-us'
+                ? 'Trump US is a premium digital asset representing excellence and growth.'
+                : coin.id === 'blackrock-contract'
+                  ? 'BlackRock Contract is an institutional-grade digital asset with unprecedented growth metrics.'
+                  : coin.id === 'osro'
+                    ? 'OSRO is a revolutionary digital asset with immense growth potential.'
+                    : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.'
       },
       market_data: {
         current_price: { usd: coin.current_price },
@@ -650,13 +741,15 @@ export async function getCoinChart(id, days = 7) {
   const custom = CUSTOM_COINS.find(c => c.id === id);
   if (custom) {
     const now = Date.now();
-    const numCandles = days === 1 ? 24 : days === 7 ? 56 : days === 30 ? 60 : 90;
-    const intervalMs = (days === 'max' ? 365 : days) * 24 * 3600000 / numCandles;
+    const numCandles = days === 1 ? 48 : days === 7 ? 84 : days === 30 ? 90 : 120;
+    const daysNum = days === 'max' ? 365 : days;
+    const intervalMs = daysNum * 24 * 3600000 / numCandles;
     const ohlc = [];
     const prices = [];
+    const volumes = [];
 
-    // Map custom ID to its metrics function
     const metricsMap = {
+      'china-inu': getChinaINUMetrics,
       'osro': getOSROMetrics,
       'musk-mini-x': getMuskMiniXMetrics,
       'oil-lab': getOilLabMetrics,
@@ -671,43 +764,31 @@ export async function getCoinChart(id, days = 7) {
     if (getMetrics) {
       for (let i = 0; i < numCandles; i++) {
         const t = now - (numCandles - i) * intervalMs;
-        const currentData = getMetrics(t);
-        const open = currentData.price;
-        // Estimate close by looking a bit ahead or just use next candle's open
-        const nextT = t + intervalMs;
-        const nextData = getMetrics(nextT > now ? now : nextT);
-        const close = nextData.price;
-        
-        // Add some "wick" volatility for the candle
-        const volatility = 0.005; 
+        const open = getMetrics(t).price;
+        const nextT = Math.min(t + intervalMs, now);
+        const close = getMetrics(nextT).price;
+        const volatility = 0.005;
         const high = Math.max(open, close) * (1 + Math.random() * volatility);
         const low = Math.min(open, close) * (1 - Math.random() * volatility);
 
-        ohlc.push({ 
-          x: t, 
-          o: parseFloat(open.toFixed(8)), 
-          h: parseFloat(high.toFixed(8)), 
-          l: parseFloat(low.toFixed(8)), 
-          c: parseFloat(close.toFixed(8)) 
+        // ApexCharts candlestick format: {x: timestamp, y: [open, high, low, close]}
+        ohlc.push({
+          x: t,
+          y: [
+            parseFloat(open.toFixed(8)),
+            parseFloat(high.toFixed(8)),
+            parseFloat(low.toFixed(8)),
+            parseFloat(close.toFixed(8))
+          ]
         });
         prices.push([t, close]);
-      }
-    } else {
-      // Fallback to random if no function found (shouldn't happen)
-      let price = custom.current_price * 0.8;
-      for (let i = 0; i < numCandles; i++) {
-        const t = now - (numCandles - i) * intervalMs;
-        const open = price;
-        const close = open * (1 + (Math.random() - 0.48) * 0.02);
-        ohlc.push({ x: t, o: open, h: Math.max(open, close) * 1.01, l: Math.min(open, close) * 0.99, c: close });
-        prices.push([t, close]);
-        price = close;
+        volumes.push([t, (custom.total_volume / numCandles) * (0.5 + Math.random())]);
       }
     }
-    return { prices, ohlc };
+    return { prices, ohlc, volumes };
   }
 
-  // For real coins: fetch OHLC from CoinGecko (returns [timestamp, open, high, low, close])
+  // For real coins: fetch OHLC + price from CoinGecko
   const ohlcDays = days === 'max' ? 365 : days;
   const [priceData, ohlcData] = await Promise.allSettled([
     cachedFetch(`chart_${id}_${days}`, CACHE_TTL.chart, () =>
@@ -719,16 +800,18 @@ export async function getCoinChart(id, days = 7) {
   ]);
 
   const prices = priceData.status === 'fulfilled' ? (priceData.value.prices || []) : [];
+  const volumes = priceData.status === 'fulfilled' ? (priceData.value.total_volumes || []) : [];
   const rawOhlc = ohlcData.status === 'fulfilled' && Array.isArray(ohlcData.value) ? ohlcData.value : [];
-  const ohlc = rawOhlc.map(([t, o, h, l, c]) => ({ x: t, o, h, l, c }));
+  // Convert to ApexCharts candlestick format: {x, y:[o,h,l,c]}
+  const ohlc = rawOhlc.map(([t, o, h, l, c]) => ({ x: t, y: [o, h, l, c] }));
 
-  return { prices, ohlc };
+  return { prices, ohlc, volumes };
 }
 
 export async function searchCoins(query) {
   const normalizedQuery = query.toLowerCase();
-  const customMatch = CUSTOM_COINS.filter(c => 
-    c.name.toLowerCase().includes(normalizedQuery) || 
+  const customMatch = CUSTOM_COINS.filter(c =>
+    c.name.toLowerCase().includes(normalizedQuery) ||
     c.symbol.toLowerCase().includes(normalizedQuery)
   ).map(c => ({
     id: c.id,
@@ -751,4 +834,40 @@ export async function getExchanges(page = 1, perPage = 100) {
   return cachedFetch(`exchanges_${page}_${perPage}`, CACHE_TTL.exchanges, () =>
     fetchWithRetry(`${BASE}/exchanges?per_page=${perPage}&page=${page}`)
   );
+}
+
+const NEWS_TTL = 10 * 60 * 1000; // 10 minutes
+
+export async function getCryptoNews() {
+  const cached = getCached('crypto_news', NEWS_TTL);
+  if (cached) return cached;
+
+  try {
+    const res = await fetch(
+      '/news-api/data/v2/news/?lang=EN&categories=BTC,ETH,Trading,Regulation,Mining,ICO,Altcoin,DeFi&sortOrder=latest&limit=200',
+      { headers: { 'Accept': 'application/json' } }
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const articles = json.Data || [];
+
+    const result = articles.map(a => ({
+      id: a.id,
+      title: a.title,
+      body: a.body,
+      imageUrl: a.imageurl,
+      url: a.url,
+      source: a.source_info?.name || a.source || 'CryptoNews',
+      sourceImg: a.source_info?.img || '',
+      publishedAt: a.published_on * 1000,
+      tags: (a.tags || '').split('|').filter(Boolean).slice(0, 4),
+      categories: (a.categories || '').split('|').filter(Boolean).slice(0, 3)
+    }));
+
+    setCache('crypto_news', result);
+    return result;
+  } catch (e) {
+    console.warn('News API failed:', e.message);
+    return [];
+  }
 }
