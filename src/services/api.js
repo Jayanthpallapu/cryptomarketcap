@@ -349,6 +349,54 @@ function getOSROMetrics(timestamp = Date.now()) {
   };
 }
 
+// Bird constants
+const BIRD_START_PRICE = 0.0003186;
+const BIRD_START_TIME = new Date('2026-05-16T15:42:00+05:30').getTime();
+const BIRD_THRESHOLD = BIRD_START_PRICE * 1.20; // 20% above start → freeze
+
+function getBirdMetrics(timestamp = Date.now()) {
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (t, currentPrice) => {
+    if (currentPrice >= BIRD_THRESHOLD) return 0;
+    const seed = Math.floor(t / 3600000);
+    const rand = ((seed * 3719 + 5281) % 233280) / 233280;
+    // +0.67% to +0.97% per hour
+    return parseFloat((0.67 + rand * (0.97 - 0.67)).toFixed(2));
+  };
+
+  let price = BIRD_START_PRICE;
+  let price24hAgo = BIRD_START_PRICE;
+  let price7dAgo = BIRD_START_PRICE;
+  const t24hAgo = timestamp - 24 * ONE_HOUR_MS;
+  const t7dAgo = timestamp - 7 * 24 * ONE_HOUR_MS;
+
+  for (let t = BIRD_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t, price);
+    price *= (1 + change / 100);
+    if (t + ONE_HOUR_MS <= t24hAgo) price24hAgo = price;
+    if (t + ONE_HOUR_MS <= t7dAgo) price7dAgo = price;
+  }
+
+  const change1h = computeHourChange(timestamp, price);
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
+  const currentPrice = parseFloat(price.toFixed(8));
+
+  // 24h change: from 24h-ago snapshot, else use initial values
+  const change24h = price24hAgo !== BIRD_START_PRICE
+    ? parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2))
+    : 11.5;
+
+  // 7d change: from 7d-ago snapshot, else use initial values
+  const change7d = price7dAgo !== BIRD_START_PRICE
+    ? parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2))
+    : 32.0;
+
+  return { price: currentPrice, change1h, change24h, change7d };
+}
+
 const CUSTOM_COINS = [
   {
     id: 'china-inu',
@@ -558,6 +606,32 @@ const CUSTOM_COINS = [
     sparkline_in_7d: {
       price: [0.03, 0.04, 0.05, 0.055, 0.06, 0.065, 0.07496]
     }
+  },
+  {
+    id: 'bird',
+    symbol: 'bird',
+    name: 'Bird',
+    image: '/bird_coin.png',
+    get current_price() {
+      return getBirdMetrics().price;
+    },
+    market_cap: 3186000,
+    market_cap_rank: 9,
+    total_volume: 520000,
+    get price_change_percentage_1h_in_currency() {
+      return getBirdMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getBirdMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getBirdMetrics().change7d;
+    },
+    circulating_supply: 10000000000,
+    max_supply: 10000000000,
+    sparkline_in_7d: {
+      price: [0.00024, 0.00026, 0.00028, 0.00029, 0.00030, 0.000314, 0.0003186]
+    }
   }
 ];
 
@@ -711,7 +785,9 @@ export async function getCoinDetail(id) {
                   ? 'BlackRock Contract is an institutional-grade digital asset with unprecedented growth metrics.'
                   : coin.id === 'osro'
                     ? 'OSRO is a revolutionary digital asset with immense growth potential.'
-                    : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.'
+                    : coin.id === 'bird'
+                      ? 'Bird is a community-driven token soaring through the crypto skies, combining viral meme energy with real DeFi utility.'
+                      : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.'
       },
       market_data: {
         current_price: { usd: coin.current_price },
@@ -756,7 +832,8 @@ export async function getCoinChart(id, days = 7) {
       'baby-trump': getBabyTrumpMetrics,
       'trump-tmp': getTrumpTMPMetrics,
       'trump-us': getTrumpUSMetrics,
-      'blackrock-contract': getBlackRockMetrics
+      'blackrock-contract': getBlackRockMetrics,
+      'bird': getBirdMetrics
     };
 
     const getMetrics = metricsMap[id];
