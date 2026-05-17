@@ -67,208 +67,6 @@ async function cachedFetch(cacheKey, ttl, fetchFn) {
 
 // ─── API Functions ──────────────────────────────────────────────────
 
-// Musk Mini X constants
-const MUSKMINI_START_PRICE = 0.07496;
-const MUSKMINI_THRESHOLD = MUSKMINI_START_PRICE * 1.30; // 30% above start
-const MUSKMINI_START_TIME = new Date('2026-05-14T00:00:00+05:30').getTime();
-
-function getMuskMiniXMetrics(timestamp = Date.now()) {
-  const ONE_HOUR_MS = 60 * 60 * 1000;
-
-  const computeHourChange = (t, currentPrice) => {
-    const seed = Math.floor(t / 3600000); // Hourly seed
-    const rand = ((seed * 6173 + 3141) % 233280) / 233280;
-    if (currentPrice < MUSKMINI_THRESHOLD) {
-      // Phase 1: 3.56% to 4.96% increase per hour
-      return parseFloat((3.56 + (rand * (4.96 - 3.56))).toFixed(2));
-    } else {
-      // Phase 2: once 30% gained, slow to 0.01% to 0.04%
-      return parseFloat((0.01 + (rand * (0.04 - 0.01))).toFixed(2));
-    }
-  };
-
-  let price = MUSKMINI_START_PRICE;
-  let price24hAgo = MUSKMINI_START_PRICE;
-  let price7dAgo = MUSKMINI_START_PRICE;
-  const t24hAgo = timestamp - 24 * ONE_HOUR_MS;
-  const t7dAgo = timestamp - 7 * 24 * ONE_HOUR_MS;
-
-  for (let t = MUSKMINI_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
-    const change = computeHourChange(t, price);
-    price *= (1 + change / 100);
-    if (t + ONE_HOUR_MS <= t24hAgo) price24hAgo = price;
-    if (t + ONE_HOUR_MS <= t7dAgo) price7dAgo = price;
-  }
-
-  const change1h = computeHourChange(timestamp, price);
-  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
-    price *= (1 + change1h / 100);
-  }
-  const currentPrice = parseFloat(price.toFixed(5));
-
-  const change24h = price24hAgo !== MUSKMINI_START_PRICE
-    ? parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2))
-    : 34.6;
-  const change7d = price7dAgo !== MUSKMINI_START_PRICE
-    ? parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2))
-    : 76.0;
-
-  return { price: currentPrice, change1h, change24h, change7d };
-}
-
-// Oil Lab constants
-const OILLAB_START_PRICE = 0.13;
-const OILLAB_START_TIME = Date.now();
-
-function getOilLabMetrics(timestamp = Date.now()) {
-  const ONE_HOUR_MS = 60 * 60 * 1000;
-
-  const computeHourChange = (t) => {
-    const seed = Math.floor(t / 3600000);
-    const rand = ((seed * 1357 + 2468) % 233280) / 233280;
-    return parseFloat((1.05 + (rand * (2.76 - 1.05))).toFixed(2));
-  };
-
-  let price = OILLAB_START_PRICE;
-  for (let t = OILLAB_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
-    const change = computeHourChange(t);
-    price *= (1 + change / 100);
-  }
-
-  const change1h = computeHourChange(timestamp);
-  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
-    price *= (1 + change1h / 100);
-  }
-  const currentPrice = parseFloat(price.toFixed(4));
-  const change24h = parseFloat((45.2 + change1h).toFixed(2));
-  const change7d = parseFloat((315.4 + change1h).toFixed(2));
-
-  return { price: currentPrice, change1h, change24h, change7d };
-}
-
-// Baby Trump constants
-const BABYTRUMP_START_PRICE = 8.016;
-const BABYTRUMP_START_TIME = Date.now();
-
-function getBabyTrumpMetrics(timestamp = Date.now()) {
-  const ONE_HOUR_MS = 60 * 60 * 1000;
-
-  const computeHourChange = (t) => {
-    const seed = Math.floor(t / 3600000);
-    const rand = ((seed * 5432 + 9876) % 233280) / 233280;
-    return parseFloat((2.03 + (rand * (3.03 - 2.03))).toFixed(2));
-  };
-
-  let price = BABYTRUMP_START_PRICE;
-  for (let t = BABYTRUMP_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
-    const change = computeHourChange(t);
-    price *= (1 + change / 100);
-  }
-
-  const change1h = computeHourChange(timestamp);
-  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
-    price *= (1 + change1h / 100);
-  }
-  const currentPrice = parseFloat(price.toFixed(4));
-  const change24h = parseFloat((4.5 + change1h).toFixed(2));
-  const change7d = parseFloat((12.4 + change1h).toFixed(2));
-
-  return { price: currentPrice, change1h, change24h, change7d };
-}
-
-// trump tmp constants
-const TRUMPTMP_START_PRICE = 13.98;
-// Start from 6:30 AM IST on May 11, 2026
-const TRUMPTMP_START_TIME = new Date('2026-05-12T13:58:00+05:30').getTime();
-
-function getTrumpTMPMetrics(timestamp = Date.now()) {
-  const ONE_HOUR_MS = 60 * 60 * 1000;
-
-  const computeHourChange = (t) => {
-    const seed = Math.floor(t / 3600000);
-    const rand = ((seed * 2468 + 1357) % 233280) / 233280;
-    // -2.45% and 0.76% (randomly decrease)
-    return parseFloat((-2.45 + (rand * (0.76 - -2.45))).toFixed(2));
-  };
-
-  let price = TRUMPTMP_START_PRICE;
-  for (let t = TRUMPTMP_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
-    const change = computeHourChange(t);
-    price *= (1 + change / 100);
-  }
-
-  const change1h = computeHourChange(timestamp);
-  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
-    price *= (1 + change1h / 100);
-  }
-  const currentPrice = parseFloat(price.toFixed(2));
-  const change24h = parseFloat((-5.8 + change1h).toFixed(2));
-  const change7d = parseFloat((-14.2 + change1h).toFixed(2));
-
-  return { price: currentPrice, change1h, change24h, change7d };
-}
-
-// Trump US constants
-const TRUMPUS_START_PRICE = 3.25;
-const TRUMPUS_START_TIME = Date.now();
-
-function getTrumpUSMetrics(timestamp = Date.now()) {
-  const ONE_HOUR_MS = 60 * 60 * 1000;
-
-  const computeHourChange = (t) => {
-    const seed = Math.floor(t / 3600000);
-    const rand = ((seed * 2345 + 6789) % 233280) / 233280;
-    return parseFloat((0.33 + (rand * (1.08 - 0.33))).toFixed(2));
-  };
-
-  let price = TRUMPUS_START_PRICE;
-  for (let t = TRUMPUS_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
-    const change = computeHourChange(t);
-    price *= (1 + change / 100);
-  }
-
-  const change1h = computeHourChange(timestamp);
-  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
-    price *= (1 + change1h / 100);
-  }
-  const currentPrice = parseFloat(price.toFixed(4));
-  const change24h = parseFloat((55 + change1h).toFixed(2));
-  const change7d = parseFloat((675 + change1h).toFixed(2));
-
-  return { price: currentPrice, change1h, change24h, change7d };
-}
-
-// BlackRock Contract constants
-const BLACKROCK_TARGET_TIME = new Date('2026-05-13T15:00:00+05:30').getTime();
-
-function getBlackRockMetrics(timestamp = Date.now()) {
-  const ONE_HOUR_MS = 60 * 60 * 1000;
-
-  const computeHourChange = (t) => {
-    const seed = Math.floor(t / 3600000);
-    const rand = ((seed * 8765 + 4321) % 233280) / 233280;
-    return parseFloat((0.85 + (rand * (1.45 - 0.85))).toFixed(2));
-  };
-
-  let startPrice = timestamp >= BLACKROCK_TARGET_TIME ? 7.03 : 6.32;
-  let price = startPrice;
-  const startTime = timestamp >= BLACKROCK_TARGET_TIME ? BLACKROCK_TARGET_TIME : (timestamp - 7 * 24 * ONE_HOUR_MS);
-
-  for (let t = startTime; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
-    const change = computeHourChange(t);
-    price *= (1 + change / 100);
-  }
-
-  const change1h = computeHourChange(timestamp);
-  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
-    price *= (1 + change1h / 100);
-  }
-  const currentPrice = parseFloat(price.toFixed(2));
-  const change24h = parseFloat((12.5 + change1h).toFixed(2));
-  const change7d = parseFloat((85.2 + change1h).toFixed(2));
-
-  return { price: currentPrice, change1h, change24h, change7d };
-}
 
 
 // China INU constants
@@ -308,46 +106,7 @@ function getChinaINUMetrics(timestamp = Date.now()) {
   }
 }
 
-// OSRO constants
-const OSRO_START_PRICE = 1.02;
-const OSRO_START_TIME = Date.now();
 
-function getOSROMetrics(timestamp = Date.now()) {
-  const ONE_HOUR_MS = 60 * 60 * 1000;
-
-  const computeHourChange = (t) => {
-    const seed = Math.floor(t / 3600000); // Hourly seed
-    const rand = ((seed * 7173 + 4141) % 233280) / 233280;
-    // Drastically reduced 1h % change to show correction (e.g. -2.15% to -5.45%)
-    return parseFloat((-5.45 + (rand * (-2.15 - -5.45))).toFixed(2));
-  };
-
-  let price = OSRO_START_PRICE;
-
-  for (let t = OSRO_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
-    const change = computeHourChange(t);
-    price *= (1 + change / 100);
-  }
-
-  const change1h = computeHourChange(timestamp);
-  // Only apply the "current" hour change if we are looking at "now"
-  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
-    price *= (1 + change1h / 100);
-  }
-
-  const currentPrice = parseFloat(price.toFixed(4));
-
-  // The 24h and 7d percentages are also reduced to normal numbers
-  const change24h = parseFloat((-18.5 + change1h).toFixed(2));
-  const change7d = parseFloat((-8.4 + change1h).toFixed(2));
-
-  return {
-    price: currentPrice,
-    change1h,
-    change24h,
-    change7d
-  };
-}
 
 // Bird constants
 const BIRD_START_PRICE = 0.0003186;
@@ -399,14 +158,46 @@ function getBirdMetrics(timestamp = Date.now()) {
 
 // Sphere constants
 const SPHERE_START_PRICE = 0.04676;
+const SPHERE_START_TIME = new Date('2026-05-17T10:00:00+05:30').getTime();
+const SPHERE_THRESHOLD = SPHERE_START_PRICE * 1.20; // 20% above start
 
 function getSphereMetrics(timestamp = Date.now()) {
-  return {
-    price: SPHERE_START_PRICE,
-    change1h: 0.0,
-    change24h: 24.6,
-    change7d: 38.0
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (t, currentPrice) => {
+    if (currentPrice >= SPHERE_THRESHOLD) return 0;
+    const seed = Math.floor(t / 3600000);
+    const rand = ((seed * 4123 + 7891) % 233280) / 233280;
+    // +0.87% to +1.97% per hour
+    return parseFloat((0.87 + rand * (1.97 - 0.87)).toFixed(2));
   };
+
+  let price = SPHERE_START_PRICE;
+  let price24hAgo = SPHERE_START_PRICE;
+  let price7dAgo = SPHERE_START_PRICE;
+  const t24hAgo = timestamp - 24 * ONE_HOUR_MS;
+  const t7dAgo = timestamp - 7 * 24 * ONE_HOUR_MS;
+
+  for (let t = SPHERE_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t, price);
+    price *= (1 + change / 100);
+    if (t + ONE_HOUR_MS <= t24hAgo) price24hAgo = price;
+    if (t + ONE_HOUR_MS <= t7dAgo) price7dAgo = price;
+  }
+
+  const change1h = computeHourChange(timestamp, price);
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
+  const currentPrice = parseFloat(price.toFixed(5));
+
+  // 24h change: from 24h-ago snapshot
+  const change24h = parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2));
+
+  // 7d change: from 7d-ago snapshot
+  const change7d = parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2));
+
+  return { price: currentPrice, change1h, change24h, change7d };
 }
 
 const CUSTOM_COINS = [
@@ -460,189 +251,6 @@ const CUSTOM_COINS = [
     max_supply: 1000000000,
     sparkline_in_7d: {
       price: [0.0017, 0.005, 0.015, 0.04, 0.08, 0.13, 0.171]
-    }
-  },
-  {
-    id: 'osro',
-    symbol: 'osro',
-    name: 'OSRO',
-    image: '/osro.png',
-    get current_price() {
-      return getOSROMetrics().price;
-    },
-    market_cap: 850000000,
-    market_cap_rank: 2,
-    total_volume: 35000000,
-    get price_change_percentage_1h_in_currency() {
-      return getOSROMetrics().change1h;
-    },
-    get price_change_percentage_24h() {
-      return getOSROMetrics().change24h;
-    },
-    get price_change_percentage_7d_in_currency() {
-      return getOSROMetrics().change7d;
-    },
-    circulating_supply: 100000000,
-    max_supply: 100000000,
-    sparkline_in_7d: {
-      price: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.65]
-    }
-  },
-  {
-    id: 'oil-lab',
-    symbol: 'oil',
-    name: 'Oil Lab',
-    image: '/oil_lab.png',
-    get current_price() {
-      return getOilLabMetrics().price;
-    },
-    market_cap: 8500000,
-    market_cap_rank: 6,
-    total_volume: 1250000,
-    get price_change_percentage_1h_in_currency() {
-      return getOilLabMetrics().change1h;
-    },
-    get price_change_percentage_24h() {
-      return getOilLabMetrics().change24h;
-    },
-    get price_change_percentage_7d_in_currency() {
-      return getOilLabMetrics().change7d;
-    },
-    circulating_supply: 301180000,
-    max_supply: 1000000000,
-    sparkline_in_7d: {
-      price: [0.000002, 0.000005, 0.000015, 0.0001, 0.005, 0.02, 0.02822]
-    }
-  },
-
-  {
-    id: 'baby-trump',
-    symbol: 'babytrump',
-    name: 'Baby Trump',
-    image: 'https://coin-images.coingecko.com/coins/images/38010/large/photo_2024-02-22_13.png',
-    get current_price() {
-      return getBabyTrumpMetrics().price;
-    },
-    market_cap: 1500000,
-    market_cap_rank: 7,
-    total_volume: 450000,
-    get price_change_percentage_1h_in_currency() {
-      return getBabyTrumpMetrics().change1h;
-    },
-    get price_change_percentage_24h() {
-      return getBabyTrumpMetrics().change24h;
-    },
-    get price_change_percentage_7d_in_currency() {
-      return getBabyTrumpMetrics().change7d;
-    },
-    circulating_supply: 1000000000,
-    max_supply: 1000000000,
-    sparkline_in_7d: {
-      price: [0.000017, 0.000016, 0.000016, 0.000015, 0.000016, 0.000015, 0.000015]
-    }
-  },
-  {
-    id: 'trump-tmp',
-    symbol: 'tmp',
-    name: 'trump tmp',
-    image: '/trump_fight.png',
-    get current_price() {
-      return getTrumpTMPMetrics().price;
-    },
-    market_cap: 12500000,
-    market_cap_rank: 4,
-    total_volume: 2500000,
-    get price_change_percentage_1h_in_currency() {
-      return getTrumpTMPMetrics().change1h;
-    },
-    get price_change_percentage_24h() {
-      return getTrumpTMPMetrics().change24h;
-    },
-    get price_change_percentage_7d_in_currency() {
-      return getTrumpTMPMetrics().change7d;
-    },
-    circulating_supply: 45000000,
-    max_supply: 100000000,
-    sparkline_in_7d: {
-      price: [5.8, 5.9, 6.0, 6.1, 6.15, 6.2, 6.22]
-    }
-  },
-  {
-    id: 'trump-us',
-    symbol: 'us',
-    name: 'Trump US',
-    image: '/trump_us.png',
-    get current_price() {
-      return getTrumpUSMetrics().price;
-    },
-    market_cap: 85000000,
-    market_cap_rank: 3,
-    total_volume: 12000000,
-    get price_change_percentage_1h_in_currency() {
-      return getTrumpUSMetrics().change1h;
-    },
-    get price_change_percentage_24h() {
-      return getTrumpUSMetrics().change24h;
-    },
-    get price_change_percentage_7d_in_currency() {
-      return getTrumpUSMetrics().change7d;
-    },
-    circulating_supply: 27000000,
-    max_supply: 100000000,
-    sparkline_in_7d: {
-      price: [2.5, 2.7, 2.9, 3.0, 3.1, 3.12, 3.15]
-    }
-  },
-  {
-    id: 'blackrock-contract',
-    symbol: 'blc',
-    name: 'BlackRock Contract',
-    image: '/blackrock_contract_logo.png',
-    get current_price() {
-      return getBlackRockMetrics().price;
-    },
-    market_cap: 950000000,
-    market_cap_rank: 1,
-    total_volume: 45000000,
-    get price_change_percentage_1h_in_currency() {
-      return getBlackRockMetrics().change1h;
-    },
-    get price_change_percentage_24h() {
-      return getBlackRockMetrics().change24h;
-    },
-    get price_change_percentage_7d_in_currency() {
-      return getBlackRockMetrics().change7d;
-    },
-    circulating_supply: 100000000,
-    max_supply: 100000000,
-    sparkline_in_7d: {
-      price: [1.2, 1.8, 2.5, 3.2, 3.8, 4.0, 4.12]
-    }
-  },
-  {
-    id: 'musk-mini-x',
-    symbol: 'mmx',
-    name: 'Musk Mini X',
-    image: '/musk_mini_x.png',
-    get current_price() {
-      return getMuskMiniXMetrics().price;
-    },
-    market_cap: 7496000,
-    market_cap_rank: 8,
-    total_volume: 950000,
-    get price_change_percentage_1h_in_currency() {
-      return getMuskMiniXMetrics().change1h;
-    },
-    get price_change_percentage_24h() {
-      return getMuskMiniXMetrics().change24h;
-    },
-    get price_change_percentage_7d_in_currency() {
-      return getMuskMiniXMetrics().change7d;
-    },
-    circulating_supply: 100000000,
-    max_supply: 1000000000,
-    sparkline_in_7d: {
-      price: [0.03, 0.04, 0.05, 0.055, 0.06, 0.065, 0.07496]
     }
   },
   {
@@ -811,21 +419,9 @@ export async function getCoinDetail(id) {
       description: {
         en: coin.id === 'china-inu'
               ? 'China INU is a community-driven meme token inspired by Chinese culture and the viral Shiba Inu movement, combining Eastern heritage with the explosive energy of DeFi.'
-              : coin.id === 'oil-lab'
-          ? 'Oil Lab is a pioneering decentralized science (DeSci) token focused on optimizing energy extraction and sustainable oil research.'
-          : coin.id === 'baby-trump'
-            ? 'Baby Trump is a community-driven meme coin.'
-            : coin.id === 'trump-tmp'
-              ? 'trump tmp is a high-performance presidential utility token.'
-              : coin.id === 'trump-us'
-                ? 'Trump US is a premium digital asset representing excellence and growth.'
-                : coin.id === 'blackrock-contract'
-                  ? 'BlackRock Contract is an institutional-grade digital asset with unprecedented growth metrics.'
-                  : coin.id === 'osro'
-                    ? 'OSRO is a revolutionary digital asset with immense growth potential.'
-                    : coin.id === 'bird'
-                      ? 'Bird is a community-driven token soaring through the crypto skies, combining viral meme energy with real DeFi utility.'
-                      : 'Musk meme is a community-driven token inspired by the visionary Elon Musk.'
+              : coin.id === 'bird'
+                ? 'Bird is a community-driven token soaring through the crypto skies, combining viral meme energy with real DeFi utility.'
+                : 'A custom community-driven token.'
       },
       market_data: {
         current_price: { usd: coin.current_price },
@@ -864,13 +460,6 @@ export async function getCoinChart(id, days = 7) {
 
     const metricsMap = {
       'china-inu': getChinaINUMetrics,
-      'osro': getOSROMetrics,
-      'musk-mini-x': getMuskMiniXMetrics,
-      'oil-lab': getOilLabMetrics,
-      'baby-trump': getBabyTrumpMetrics,
-      'trump-tmp': getTrumpTMPMetrics,
-      'trump-us': getTrumpUSMetrics,
-      'blackrock-contract': getBlackRockMetrics,
       'bird': getBirdMetrics
     };
 
