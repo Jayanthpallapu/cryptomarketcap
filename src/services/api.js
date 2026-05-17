@@ -397,7 +397,45 @@ function getBirdMetrics(timestamp = Date.now()) {
   return { price: currentPrice, change1h, change24h, change7d };
 }
 
+// Sphere constants
+const SPHERE_START_PRICE = 0.04676;
+
+function getSphereMetrics(timestamp = Date.now()) {
+  return {
+    price: SPHERE_START_PRICE,
+    change1h: 0.0,
+    change24h: 24.6,
+    change7d: 38.0
+  };
+}
+
 const CUSTOM_COINS = [
+  {
+    id: 'sphere',
+    symbol: 'sphere',
+    name: 'Sphere',
+    image: '/sphere.png',
+    get current_price() {
+      return getSphereMetrics().price;
+    },
+    market_cap: 4676000,
+    market_cap_rank: 10,
+    total_volume: 500000,
+    get price_change_percentage_1h_in_currency() {
+      return getSphereMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getSphereMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getSphereMetrics().change7d;
+    },
+    circulating_supply: 100000000,
+    max_supply: 100000000,
+    sparkline_in_7d: {
+      price: [0.03, 0.035, 0.04, 0.042, 0.044, 0.045, 0.04676]
+    }
+  },
   {
     id: 'china-inu',
     symbol: 'cinu',
