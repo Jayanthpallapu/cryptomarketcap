@@ -200,6 +200,10 @@ function getSphereMetrics(timestamp = Date.now()) {
   return { price: currentPrice, change1h, change24h, change7d };
 }
 
+function getAIMetrics(timestamp = Date.now()) {
+  return { price: 0.04038, change1h: 0.0, change24h: 2.5, change7d: 8.0 };
+}
+
 const CUSTOM_COINS = [
   {
     id: 'sphere',
@@ -277,6 +281,32 @@ const CUSTOM_COINS = [
     max_supply: 10000000000,
     sparkline_in_7d: {
       price: [0.00024, 0.00026, 0.00028, 0.00029, 0.00030, 0.000314, 0.0003186]
+    }
+  },
+  {
+    id: 'artificial-intelligence',
+    symbol: 'ai',
+    name: 'Artificial Intelligence',
+    image: '/artificial_intelligence.png',
+    get current_price() {
+      return getAIMetrics().price;
+    },
+    market_cap: 4038000,
+    market_cap_rank: 11,
+    total_volume: 100000,
+    get price_change_percentage_1h_in_currency() {
+      return getAIMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getAIMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getAIMetrics().change7d;
+    },
+    circulating_supply: 100000000,
+    max_supply: 100000000,
+    sparkline_in_7d: {
+      price: [0.03738, 0.038, 0.0385, 0.039, 0.03939, 0.04038, 0.04038]
     }
   }
 ];
@@ -460,7 +490,8 @@ export async function getCoinChart(id, days = 7) {
 
     const metricsMap = {
       'china-inu': getChinaINUMetrics,
-      'bird': getBirdMetrics
+      'bird': getBirdMetrics,
+      'artificial-intelligence': getAIMetrics
     };
 
     const getMetrics = metricsMap[id];
