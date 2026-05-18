@@ -200,8 +200,48 @@ function getSphereMetrics(timestamp = Date.now()) {
   return { price: currentPrice, change1h, change24h, change7d };
 }
 
+// AI constants
+const AI_START_PRICE = 0.04038;
+const AI_START_TIME = new Date('2026-05-18T16:00:00+05:30').getTime();
+const AI_THRESHOLD = AI_START_PRICE * 1.10; // 10% above start
+
 function getAIMetrics(timestamp = Date.now()) {
-  return { price: 0.04038, change1h: 0.0, change24h: 2.5, change7d: 8.0 };
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (t, currentPrice) => {
+    if (currentPrice >= AI_THRESHOLD) return 0;
+    const seed = Math.floor(t / 3600000);
+    const rand = ((seed * 5231 + 9871) % 233280) / 233280;
+    // +0.32% to +0.48% per hour
+    return parseFloat((0.32 + rand * (0.48 - 0.32)).toFixed(2));
+  };
+
+  let price = AI_START_PRICE;
+  let price24hAgo = AI_START_PRICE;
+  let price7dAgo = AI_START_PRICE;
+  const t24hAgo = timestamp - 24 * ONE_HOUR_MS;
+  const t7dAgo = timestamp - 7 * 24 * ONE_HOUR_MS;
+
+  for (let t = AI_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t, price);
+    price *= (1 + change / 100);
+    if (t + ONE_HOUR_MS <= t24hAgo) price24hAgo = price;
+    if (t + ONE_HOUR_MS <= t7dAgo) price7dAgo = price;
+  }
+
+  const change1h = computeHourChange(timestamp, price);
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
+  const currentPrice = parseFloat(price.toFixed(5));
+
+  // 24h change: from 24h-ago snapshot
+  const change24h = parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2));
+
+  // 7d change: from 7d-ago snapshot
+  const change7d = parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2));
+
+  return { price: currentPrice, change1h, change24h, change7d };
 }
 
 const CUSTOM_COINS = [
@@ -306,7 +346,7 @@ const CUSTOM_COINS = [
     circulating_supply: 100000000,
     max_supply: 100000000,
     sparkline_in_7d: {
-      price: [0.03738, 0.038, 0.0385, 0.039, 0.03939, 0.04038, 0.04038]
+      price: [0.04038, 0.04038, 0.04038, 0.04038, 0.04038, 0.04038, 0.04038]
     }
   }
 ];
