@@ -244,6 +244,53 @@ function getAIMetrics(timestamp = Date.now()) {
   return { price: currentPrice, change1h, change24h, change7d };
 }
 
+// Microsoft constants
+const MICROSOFT_START_PRICE = 0.1184;
+const MICROSOFT_START_TIME = new Date('2026-05-19T12:00:00+05:30').getTime();
+const MICROSOFT_THRESHOLD = MICROSOFT_START_PRICE * 1.14; // 14% above start
+
+function getMicrosoftMetrics(timestamp = Date.now()) {
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (t, currentPrice) => {
+    if (currentPrice >= MICROSOFT_THRESHOLD) return 0;
+    const seed = Math.floor(t / 3600000);
+    const rand = ((seed * 7788 + 9900) % 233280) / 233280;
+    // +0.67% to +1.96% per hour
+    return parseFloat((0.67 + rand * (1.96 - 0.67)).toFixed(2));
+  };
+
+  let price = MICROSOFT_START_PRICE;
+  // Initial historical baseline prices to yield exactly 35.5% (24h) and 42% (7d) initially
+  let price24hAgo = MICROSOFT_START_PRICE / 1.355;
+  let price7dAgo = MICROSOFT_START_PRICE / 1.42;
+
+  const t24hAgo = timestamp - 24 * ONE_HOUR_MS;
+  const t7dAgo = timestamp - 7 * 24 * ONE_HOUR_MS;
+
+  for (let t = MICROSOFT_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t, price);
+    if (t + ONE_HOUR_MS <= t24hAgo) {
+      price24hAgo = price;
+    }
+    if (t + ONE_HOUR_MS <= t7dAgo) {
+      price7dAgo = price;
+    }
+    price *= (1 + change / 100);
+  }
+
+  const change1h = computeHourChange(timestamp, price);
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
+  const currentPrice = parseFloat(price.toFixed(5));
+
+  const change24h = parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2));
+  const change7d = parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2));
+
+  return { price: currentPrice, change1h, change24h, change7d };
+}
+
 const CUSTOM_COINS = [
   {
     id: 'sphere',
@@ -347,6 +394,32 @@ const CUSTOM_COINS = [
     max_supply: 100000000,
     sparkline_in_7d: {
       price: [0.04038, 0.04038, 0.04038, 0.04038, 0.04038, 0.04038, 0.04038]
+    }
+  },
+  {
+    id: 'microsoft',
+    symbol: 'msft',
+    name: 'Microsoft',
+    image: '/microsoft.png',
+    get current_price() {
+      return getMicrosoftMetrics().price;
+    },
+    market_cap: 8840000,
+    market_cap_rank: 12,
+    total_volume: 750000,
+    get price_change_percentage_1h_in_currency() {
+      return getMicrosoftMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getMicrosoftMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getMicrosoftMetrics().change7d;
+    },
+    circulating_supply: 75000000,
+    max_supply: 100000000,
+    sparkline_in_7d: {
+      price: [0.0834, 0.087, 0.09, 0.10, 0.11, 0.1184, 0.1184]
     }
   }
 ];
@@ -491,7 +564,9 @@ export async function getCoinDetail(id) {
               ? 'China INU is a community-driven meme token inspired by Chinese culture and the viral Shiba Inu movement, combining Eastern heritage with the explosive energy of DeFi.'
               : coin.id === 'bird'
                 ? 'Bird is a community-driven token soaring through the crypto skies, combining viral meme energy with real DeFi utility.'
-                : 'A custom community-driven token.'
+                : coin.id === 'microsoft'
+                  ? 'Microsoft coin represents the intersection of enterprise tech and decentralized finance, bringing trusted legacy innovation to the blockchain.'
+                  : 'A custom community-driven token.'
       },
       market_data: {
         current_price: { usd: coin.current_price },
@@ -531,7 +606,8 @@ export async function getCoinChart(id, days = 7) {
     const metricsMap = {
       'china-inu': getChinaINUMetrics,
       'bird': getBirdMetrics,
-      'artificial-intelligence': getAIMetrics
+      'artificial-intelligence': getAIMetrics,
+      'microsoft': getMicrosoftMetrics
     };
 
     const getMetrics = metricsMap[id];
