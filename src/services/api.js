@@ -291,6 +291,54 @@ function getMicrosoftMetrics(timestamp = Date.now()) {
   return { price: currentPrice, change1h, change24h, change7d };
 }
 
+// Nvidia constants
+const NVIDIA_START_PRICE = 0.2395;
+const NVIDIA_START_TIME = new Date('2026-05-20T12:00:00+05:30').getTime();
+const NVIDIA_THRESHOLD = NVIDIA_START_PRICE * 1.16; // 16% above start
+
+function getNvidiaMetrics(timestamp = Date.now()) {
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (t, currentPrice) => {
+    if (currentPrice >= NVIDIA_THRESHOLD) return 0;
+    const seed = Math.floor(t / 3600000);
+    const rand = ((seed * 8899 + 1122) % 233280) / 233280;
+    // +0.67% to +1.34% per hour
+    return parseFloat((0.67 + rand * (1.34 - 0.67)).toFixed(2));
+  };
+
+  let price = NVIDIA_START_PRICE;
+  // Initial historical baseline prices to yield exactly 33.9% (24h) and 44% (7d) initially
+  let price24hAgo = NVIDIA_START_PRICE / 1.339;
+  let price7dAgo = NVIDIA_START_PRICE / 1.44;
+
+  const t24hAgo = timestamp - 24 * ONE_HOUR_MS;
+  const t7dAgo = timestamp - 7 * 24 * ONE_HOUR_MS;
+
+  for (let t = NVIDIA_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t, price);
+    if (t + ONE_HOUR_MS <= t24hAgo) {
+      price24hAgo = price;
+    }
+    if (t + ONE_HOUR_MS <= t7dAgo) {
+      price7dAgo = price;
+    }
+    price *= (1 + change / 100);
+  }
+
+  const change1h = computeHourChange(timestamp, price);
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
+  const currentPrice = parseFloat(price.toFixed(5));
+
+  const change24h = parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2));
+  const change7d = parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2));
+
+  return { price: currentPrice, change1h, change24h, change7d };
+}
+
+
 const CUSTOM_COINS = [
   {
     id: 'sphere',
@@ -420,6 +468,32 @@ const CUSTOM_COINS = [
     max_supply: 100000000,
     sparkline_in_7d: {
       price: [0.0834, 0.087, 0.09, 0.10, 0.11, 0.1184, 0.1184]
+    }
+  },
+  {
+    id: 'nvidia',
+    symbol: 'nvda',
+    name: 'Nvidia',
+    image: '/nvidia.png',
+    get current_price() {
+      return getNvidiaMetrics().price;
+    },
+    market_cap: 23950000,
+    market_cap_rank: 8,
+    total_volume: 1200000,
+    get price_change_percentage_1h_in_currency() {
+      return getNvidiaMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getNvidiaMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getNvidiaMetrics().change7d;
+    },
+    circulating_supply: 100000000,
+    max_supply: 100000000,
+    sparkline_in_7d: {
+      price: [0.1663, 0.170, 0.175, 0.1789, 0.20, 0.22, 0.2395]
     }
   }
 ];
@@ -566,7 +640,9 @@ export async function getCoinDetail(id) {
                 ? 'Bird is a community-driven token soaring through the crypto skies, combining viral meme energy with real DeFi utility.'
                 : coin.id === 'microsoft'
                   ? 'Microsoft coin represents the intersection of enterprise tech and decentralized finance, bringing trusted legacy innovation to the blockchain.'
-                  : 'A custom community-driven token.'
+                  : coin.id === 'nvidia'
+                    ? 'Nvidia coin represents the frontier of AI-driven decentralized computation and graphics-accelerated blockchain technology.'
+                    : 'A custom community-driven token.'
       },
       market_data: {
         current_price: { usd: coin.current_price },
@@ -607,7 +683,8 @@ export async function getCoinChart(id, days = 7) {
       'china-inu': getChinaINUMetrics,
       'bird': getBirdMetrics,
       'artificial-intelligence': getAIMetrics,
-      'microsoft': getMicrosoftMetrics
+      'microsoft': getMicrosoftMetrics,
+      'nvidia': getNvidiaMetrics
     };
 
     const getMetrics = metricsMap[id];
