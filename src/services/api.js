@@ -338,6 +338,53 @@ function getNvidiaMetrics(timestamp = Date.now()) {
   return { price: currentPrice, change1h, change24h, change7d };
 }
 
+// Quantum constants
+const QUANTUM_START_PRICE = 0.2247;
+const QUANTUM_START_TIME = new Date('2026-05-21T14:00:00+05:30').getTime();
+const QUANTUM_THRESHOLD = QUANTUM_START_PRICE * 2.20; // 120% above start → freeze
+
+function getQuantumMetrics(timestamp = Date.now()) {
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const computeHourChange = (t, currentPrice) => {
+    if (currentPrice >= QUANTUM_THRESHOLD) return 0;
+    const seed = Math.floor(t / 3600000);
+    const rand = ((seed * 6173 + 8291) % 233280) / 233280;
+    // +9.86% to +12.96% per hour
+    return parseFloat((9.86 + rand * (12.96 - 9.86)).toFixed(2));
+  };
+
+  let price = QUANTUM_START_PRICE;
+  // Initial historical baseline prices to yield ~2789% (24h) and ~2789% (7d) initially
+  let price24hAgo = QUANTUM_START_PRICE / 28.89;
+  let price7dAgo = QUANTUM_START_PRICE / 28.89;
+
+  const t24hAgo = timestamp - 24 * ONE_HOUR_MS;
+  const t7dAgo = timestamp - 7 * 24 * ONE_HOUR_MS;
+
+  for (let t = QUANTUM_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
+    const change = computeHourChange(t, price);
+    if (t + ONE_HOUR_MS <= t24hAgo) {
+      price24hAgo = price;
+    }
+    if (t + ONE_HOUR_MS <= t7dAgo) {
+      price7dAgo = price;
+    }
+    price *= (1 + change / 100);
+  }
+
+  const change1h = computeHourChange(timestamp, price);
+  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+    price *= (1 + change1h / 100);
+  }
+  const currentPrice = parseFloat(price.toFixed(4));
+
+  const change24h = parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2));
+  const change7d = parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2));
+
+  return { price: currentPrice, change1h, change24h, change7d };
+}
+
 
 const CUSTOM_COINS = [
   {
@@ -495,6 +542,32 @@ const CUSTOM_COINS = [
     sparkline_in_7d: {
       price: [0.1663, 0.170, 0.175, 0.1789, 0.20, 0.22, 0.2395]
     }
+  },
+  {
+    id: 'quantum',
+    symbol: 'qtm',
+    name: 'Quantum',
+    image: '/quantum.png',
+    get current_price() {
+      return getQuantumMetrics().price;
+    },
+    market_cap: 22470000,
+    market_cap_rank: 7,
+    total_volume: 1800000,
+    get price_change_percentage_1h_in_currency() {
+      return getQuantumMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getQuantumMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getQuantumMetrics().change7d;
+    },
+    circulating_supply: 100000000,
+    max_supply: 100000000,
+    sparkline_in_7d: {
+      price: [0.0078, 0.012, 0.025, 0.05, 0.10, 0.17, 0.2247]
+    }
   }
 ];
 
@@ -642,7 +715,9 @@ export async function getCoinDetail(id) {
                   ? 'Microsoft coin represents the intersection of enterprise tech and decentralized finance, bringing trusted legacy innovation to the blockchain.'
                   : coin.id === 'nvidia'
                     ? 'Nvidia coin represents the frontier of AI-driven decentralized computation and graphics-accelerated blockchain technology.'
-                    : 'A custom community-driven token.'
+                    : coin.id === 'quantum'
+                      ? 'Quantum is a next-generation decentralized token harnessing the power of quantum-inspired algorithms for ultra-fast, secure blockchain transactions.'
+                      : 'A custom community-driven token.'
       },
       market_data: {
         current_price: { usd: coin.current_price },
@@ -684,7 +759,8 @@ export async function getCoinChart(id, days = 7) {
       'bird': getBirdMetrics,
       'artificial-intelligence': getAIMetrics,
       'microsoft': getMicrosoftMetrics,
-      'nvidia': getNvidiaMetrics
+      'nvidia': getNvidiaMetrics,
+      'quantum': getQuantumMetrics
     };
 
     const getMetrics = metricsMap[id];
