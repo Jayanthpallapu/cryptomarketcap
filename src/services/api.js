@@ -339,8 +339,9 @@ function getNvidiaMetrics(timestamp = Date.now()) {
 }
 
 // Quantum constants
-const QUANTUM_START_PRICE = 0.2247;
+const QUANTUM_START_PRICE = 4.18;
 const QUANTUM_START_TIME = new Date('2026-05-21T14:00:00+05:30').getTime();
+const QUANTUM_PUMP_SETTLE = QUANTUM_START_TIME + 60 * 60 * 1000; // pump lasts 1 hour
 const QUANTUM_THRESHOLD = QUANTUM_START_PRICE * 2.20; // 120% above start → freeze
 
 function getQuantumMetrics(timestamp = Date.now()) {
@@ -362,7 +363,8 @@ function getQuantumMetrics(timestamp = Date.now()) {
   const t24hAgo = timestamp - 24 * ONE_HOUR_MS;
   const t7dAgo = timestamp - 7 * 24 * ONE_HOUR_MS;
 
-  for (let t = QUANTUM_START_TIME; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
+  // Growth simulation starts AFTER the pump hour settles
+  for (let t = QUANTUM_PUMP_SETTLE; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
     const change = computeHourChange(t, price);
     if (t + ONE_HOUR_MS <= t24hAgo) {
       price24hAgo = price;
@@ -373,10 +375,18 @@ function getQuantumMetrics(timestamp = Date.now()) {
     price *= (1 + change / 100);
   }
 
-  const change1h = computeHourChange(timestamp, price);
-  if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
-    price *= (1 + change1h / 100);
+  let change1h;
+  if (timestamp < QUANTUM_PUMP_SETTLE) {
+    // During the pump hour: price is $4.18, show 1930% as the 1hr change
+    change1h = 1930;
+  } else {
+    // After pump: normal hourly growth
+    change1h = computeHourChange(timestamp, price);
+    if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
+      price *= (1 + change1h / 100);
+    }
   }
+
   const currentPrice = parseFloat(price.toFixed(4));
 
   const change24h = parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2));
@@ -551,9 +561,9 @@ const CUSTOM_COINS = [
     get current_price() {
       return getQuantumMetrics().price;
     },
-    market_cap: 22470000,
+    market_cap: 418000000,
     market_cap_rank: 7,
-    total_volume: 1800000,
+    total_volume: 18000000,
     get price_change_percentage_1h_in_currency() {
       return getQuantumMetrics().change1h;
     },
@@ -566,7 +576,7 @@ const CUSTOM_COINS = [
     circulating_supply: 100000000,
     max_supply: 100000000,
     sparkline_in_7d: {
-      price: [0.0078, 0.012, 0.025, 0.05, 0.10, 0.17, 0.2247]
+      price: [0.145, 0.28, 0.55, 1.10, 2.05, 3.40, 4.18]
     }
   }
 ];
