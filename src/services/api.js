@@ -343,7 +343,7 @@ const QUANTUM_START_TIME = new Date('2026-05-21T14:00:00+05:30').getTime(); // 1
 const QUANTUM_PUMP_SETTLE = QUANTUM_START_TIME + 60 * 60 * 1000; // 15:00 IST
 const QUANTUM_PUMP_PRICE = 6.3;
 const QUANTUM_BASE_PRICE = 0.31034483; // base price before 1930% pump
-const QUANTUM_THRESHOLD = QUANTUM_PUMP_PRICE * 2.20; // 120% above $6.3 start → freeze ($13.86)
+const QUANTUM_THRESHOLD = 10.98; // Stop increasing at $10.98
 
 function getQuantumMetrics(timestamp = Date.now()) {
   const ONE_HOUR_MS = 60 * 60 * 1000;
@@ -572,7 +572,7 @@ const CUSTOM_COINS = [
   {
     id: 'quantum',
     symbol: 'qtm',
-    name: 'Quantum',
+    name: 'Quantum coin',
     image: '/quantum.png',
     get current_price() {
       return getQuantumMetrics().price;
