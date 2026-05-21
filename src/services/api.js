@@ -341,9 +341,9 @@ function getNvidiaMetrics(timestamp = Date.now()) {
 // Quantum constants
 const QUANTUM_START_TIME = new Date('2026-05-21T14:00:00+05:30').getTime(); // 14:00 IST
 const QUANTUM_PUMP_SETTLE = QUANTUM_START_TIME + 60 * 60 * 1000; // 15:00 IST
-const QUANTUM_PUMP_PRICE = 4.18;
-const QUANTUM_BASE_PRICE = 0.20591133; // base price before 1930% pump
-const QUANTUM_THRESHOLD = QUANTUM_PUMP_PRICE * 2.20; // 120% above $4.18 start → freeze ($9.196)
+const QUANTUM_PUMP_PRICE = 6.3;
+const QUANTUM_BASE_PRICE = 0.31034483; // base price before 1930% pump
+const QUANTUM_THRESHOLD = QUANTUM_PUMP_PRICE * 2.20; // 120% above $6.3 start → freeze ($13.86)
 
 function getQuantumMetrics(timestamp = Date.now()) {
   const ONE_HOUR_MS = 60 * 60 * 1000;
@@ -391,7 +391,7 @@ function getQuantumMetrics(timestamp = Date.now()) {
   // For historical calculations matching ~2789% initial baseline
   const getHistoricalPrice = (t) => {
     if (t < QUANTUM_START_TIME) {
-      return 0.14468674; // Yields exactly 2789.00% change when current price is 4.18
+      return 0.21806853; // Yields exactly 2789.00% change when current price is 6.3
     }
     return getPriceAtTime(t);
   };
@@ -577,7 +577,7 @@ const CUSTOM_COINS = [
     get current_price() {
       return getQuantumMetrics().price;
     },
-    market_cap: 418000000,
+    market_cap: 630000000,
     market_cap_rank: 7,
     total_volume: 18000000,
     get price_change_percentage_1h_in_currency() {
@@ -592,7 +592,7 @@ const CUSTOM_COINS = [
     circulating_supply: 100000000,
     max_supply: 100000000,
     sparkline_in_7d: {
-      price: [0.145, 0.28, 0.55, 1.10, 2.05, 3.40, 4.18]
+      price: [0.218, 0.42, 0.83, 1.66, 3.09, 5.12, 6.30]
     }
   }
 ];
