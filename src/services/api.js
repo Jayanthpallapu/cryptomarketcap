@@ -339,60 +339,76 @@ function getNvidiaMetrics(timestamp = Date.now()) {
 }
 
 // Quantum constants
-const QUANTUM_START_PRICE = 4.18;
-const QUANTUM_START_TIME = new Date('2026-05-21T14:00:00+05:30').getTime();
-const QUANTUM_PUMP_SETTLE = QUANTUM_START_TIME + 60 * 60 * 1000; // pump lasts 1 hour
-const QUANTUM_THRESHOLD = QUANTUM_START_PRICE * 2.20; // 120% above start → freeze
+const QUANTUM_START_TIME = new Date('2026-05-21T14:00:00+05:30').getTime(); // 14:00 IST
+const QUANTUM_PUMP_SETTLE = QUANTUM_START_TIME + 60 * 60 * 1000; // 15:00 IST
+const QUANTUM_PUMP_PRICE = 4.18;
+const QUANTUM_BASE_PRICE = 0.20591133; // base price before 1930% pump
+const QUANTUM_THRESHOLD = QUANTUM_PUMP_PRICE * 2.20; // 120% above $4.18 start → freeze ($9.196)
 
 function getQuantumMetrics(timestamp = Date.now()) {
   const ONE_HOUR_MS = 60 * 60 * 1000;
 
-  const computeHourChange = (t, currentPrice) => {
-    if (currentPrice >= QUANTUM_THRESHOLD) return 0;
-    const seed = Math.floor(t / 3600000);
-    const rand = ((seed * 6173 + 8291) % 233280) / 233280;
-    // +9.86% to +12.96% per hour
-    return parseFloat((9.86 + rand * (12.96 - 9.86)).toFixed(2));
+  const getPriceAtTime = (t) => {
+    if (t < QUANTUM_START_TIME) {
+      return QUANTUM_BASE_PRICE;
+    }
+    if (t < QUANTUM_PUMP_SETTLE) {
+      return QUANTUM_PUMP_PRICE;
+    }
+
+    // After 15:00 IST: simulate hourly growth
+    let p = QUANTUM_PUMP_PRICE;
+    for (let currentT = QUANTUM_PUMP_SETTLE; currentT + ONE_HOUR_MS <= t; currentT += ONE_HOUR_MS) {
+      if (p >= QUANTUM_THRESHOLD) break;
+      const seed = Math.floor(currentT / 3600000);
+      const rand = ((seed * 6173 + 8291) % 233280) / 233280;
+      const change = 9.86 + rand * (12.96 - 9.86);
+      p *= (1 + change / 100);
+      if (p > QUANTUM_THRESHOLD) {
+        p = QUANTUM_THRESHOLD;
+      }
+    }
+
+    // Interpolate progress within the current active hour
+    const currentHourStart = QUANTUM_PUMP_SETTLE + Math.floor((t - QUANTUM_PUMP_SETTLE) / ONE_HOUR_MS) * ONE_HOUR_MS;
+    if (t > currentHourStart && p < QUANTUM_THRESHOLD) {
+      const seed = Math.floor(currentHourStart / 3600000);
+      const rand = ((seed * 6173 + 8291) % 233280) / 233280;
+      const change = 9.86 + rand * (12.96 - 9.86);
+      const progress = (t - currentHourStart) / ONE_HOUR_MS;
+      p *= (1 + (change * progress) / 100);
+      if (p > QUANTUM_THRESHOLD) {
+        p = QUANTUM_THRESHOLD;
+      }
+    }
+
+    return p;
   };
 
-  let price = QUANTUM_START_PRICE;
-  // Initial historical baseline prices to yield ~2789% (24h) and ~2789% (7d) initially
-  let price24hAgo = QUANTUM_START_PRICE / 28.89;
-  let price7dAgo = QUANTUM_START_PRICE / 28.89;
+  const currentPrice = getPriceAtTime(timestamp);
+  const price1hAgo = getPriceAtTime(timestamp - ONE_HOUR_MS);
 
-  const t24hAgo = timestamp - 24 * ONE_HOUR_MS;
-  const t7dAgo = timestamp - 7 * 24 * ONE_HOUR_MS;
-
-  // Growth simulation starts AFTER the pump hour settles
-  for (let t = QUANTUM_PUMP_SETTLE; t + ONE_HOUR_MS <= timestamp; t += ONE_HOUR_MS) {
-    const change = computeHourChange(t, price);
-    if (t + ONE_HOUR_MS <= t24hAgo) {
-      price24hAgo = price;
+  // For historical calculations matching ~2789% initial baseline
+  const getHistoricalPrice = (t) => {
+    if (t < QUANTUM_START_TIME) {
+      return 0.14468674; // Yields exactly 2789.00% change when current price is 4.18
     }
-    if (t + ONE_HOUR_MS <= t7dAgo) {
-      price7dAgo = price;
-    }
-    price *= (1 + change / 100);
-  }
+    return getPriceAtTime(t);
+  };
 
-  let change1h;
-  if (timestamp < QUANTUM_PUMP_SETTLE) {
-    // During the pump hour: price is $4.18, show 1930% as the 1hr change
-    change1h = 1930;
-  } else {
-    // After pump: normal hourly growth
-    change1h = computeHourChange(timestamp, price);
-    if (Math.abs(timestamp - Date.now()) < ONE_HOUR_MS) {
-      price *= (1 + change1h / 100);
-    }
-  }
+  const price24hAgo = getHistoricalPrice(timestamp - 24 * ONE_HOUR_MS);
+  const price7dAgo = getHistoricalPrice(timestamp - 7 * 24 * ONE_HOUR_MS);
 
-  const currentPrice = parseFloat(price.toFixed(4));
+  const change1h = parseFloat((((currentPrice - price1hAgo) / price1hAgo) * 100).toFixed(2));
+  const change24h = parseFloat((((currentPrice - price24hAgo) / price24hAgo) * 100).toFixed(2));
+  const change7d = parseFloat((((currentPrice - price7dAgo) / price7dAgo) * 100).toFixed(2));
 
-  const change24h = parseFloat((((price - price24hAgo) / price24hAgo) * 100).toFixed(2));
-  const change7d = parseFloat((((price - price7dAgo) / price7dAgo) * 100).toFixed(2));
-
-  return { price: currentPrice, change1h, change24h, change7d };
+  return {
+    price: parseFloat(currentPrice.toFixed(4)),
+    change1h,
+    change24h,
+    change7d
+  };
 }
 
 
