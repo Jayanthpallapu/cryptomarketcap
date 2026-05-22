@@ -412,6 +412,59 @@ function getQuantumMetrics(timestamp = Date.now()) {
 }
 
 
+function getRabbitXMetrics(timestamp = Date.now()) {
+  const now = Date.now();
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+  const ONE_DAY_MS = 24 * ONE_HOUR_MS;
+  const SEVEN_DAYS_MS = 7 * ONE_DAY_MS;
+
+  const getPriceAt = (t) => {
+    const dt = Math.max(0, now - t);
+    
+    // Define the points:
+    // dt = 0 -> 0.325
+    // dt = 1 hr -> 0.325 / 1.0032
+    // dt = 24 hr -> 0.325 / 1.043
+    // dt = 7 days -> 0.325 / 1.05
+    
+    const p0 = 0.325;
+    const p1 = 0.325 / 1.0032;
+    const p2 = 0.325 / 1.043;
+    const p3 = 0.325 / 1.05;
+
+    if (dt <= ONE_HOUR_MS) {
+      const pct = dt / ONE_HOUR_MS;
+      return p0 + (p1 - p0) * pct;
+    } else if (dt <= ONE_DAY_MS) {
+      const pct = (dt - ONE_HOUR_MS) / (ONE_DAY_MS - ONE_HOUR_MS);
+      return p1 + (p2 - p1) * pct;
+    } else if (dt <= SEVEN_DAYS_MS) {
+      const pct = (dt - ONE_DAY_MS) / (SEVEN_DAYS_MS - ONE_DAY_MS);
+      return p2 + (p3 - p2) * pct;
+    } else {
+      const extraDays = (dt - SEVEN_DAYS_MS) / ONE_DAY_MS;
+      return Math.max(0.28, p3 - extraDays * 0.0005);
+    }
+  };
+
+  const currentPrice = getPriceAt(timestamp);
+  const price1hAgo = getPriceAt(timestamp - ONE_HOUR_MS);
+  const price24hAgo = getPriceAt(timestamp - ONE_DAY_MS);
+  const price7dAgo = getPriceAt(timestamp - SEVEN_DAYS_MS);
+
+  const change1h = parseFloat((((currentPrice - price1hAgo) / price1hAgo) * 100).toFixed(2));
+  const change24h = parseFloat((((currentPrice - price24hAgo) / price24hAgo) * 100).toFixed(2));
+  const change7d = parseFloat((((currentPrice - price7dAgo) / price7dAgo) * 100).toFixed(2));
+
+  return {
+    price: parseFloat(currentPrice.toFixed(4)),
+    change1h,
+    change24h,
+    change7d
+  };
+}
+
+
 const CUSTOM_COINS = [
   {
     id: 'sphere',
@@ -594,6 +647,32 @@ const CUSTOM_COINS = [
     sparkline_in_7d: {
       price: [0.218, 0.42, 0.83, 1.66, 3.09, 5.12, 6.30]
     }
+  },
+  {
+    id: 'rabbitx',
+    symbol: 'rbx',
+    name: 'RabbitX',
+    image: '/rabbitx.png',
+    get current_price() {
+      return getRabbitXMetrics().price;
+    },
+    market_cap: 32500000,
+    market_cap_rank: 13,
+    total_volume: 2400000,
+    get price_change_percentage_1h_in_currency() {
+      return getRabbitXMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getRabbitXMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getRabbitXMetrics().change7d;
+    },
+    circulating_supply: 100000000,
+    max_supply: 1000000000,
+    sparkline_in_7d: {
+      price: [0.3095, 0.3116, 0.315, 0.32, 0.322, 0.3239, 0.325]
+    }
   }
 ];
 
@@ -743,7 +822,9 @@ export async function getCoinDetail(id) {
                     ? 'Nvidia coin represents the frontier of AI-driven decentralized computation and graphics-accelerated blockchain technology.'
                     : coin.id === 'quantum'
                       ? 'Quantum is a next-generation decentralized token harnessing the power of quantum-inspired algorithms for ultra-fast, secure blockchain transactions.'
-                      : 'A custom community-driven token.'
+                      : coin.id === 'rabbitx'
+                        ? 'RabbitX is a next-generation decentralized exchange token offering lightning-fast, secure, and low-latency trading experiences with robust liquidity and utility.'
+                        : 'A custom community-driven token.'
       },
       market_data: {
         current_price: { usd: coin.current_price },
@@ -786,7 +867,8 @@ export async function getCoinChart(id, days = 7) {
       'artificial-intelligence': getAIMetrics,
       'microsoft': getMicrosoftMetrics,
       'nvidia': getNvidiaMetrics,
-      'quantum': getQuantumMetrics
+      'quantum': getQuantumMetrics,
+      'rabbitx': getRabbitXMetrics
     };
 
     const getMetrics = metricsMap[id];
