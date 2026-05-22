@@ -422,28 +422,20 @@ function getRabbitXMetrics(timestamp = Date.now()) {
     const dt = Math.max(0, now - t);
     
     // Define the points:
-    // dt = 0 -> 0.325
-    // dt = 1 hr -> 0.325 / 1.0032
-    // dt = 24 hr -> 0.325 / 1.043
-    // dt = 7 days -> 0.325 / 1.05
+    // dt = 0 -> 12.03
+    // dt >= 1 hr -> 12.03 / 42.8
     
-    const p0 = 0.325;
-    const p1 = 0.325 / 1.0032;
-    const p2 = 0.325 / 1.043;
-    const p3 = 0.325 / 1.05;
+    const p0 = 12.03;
+    const pHistorical = 12.03 / 42.8;
 
     if (dt <= ONE_HOUR_MS) {
       const pct = dt / ONE_HOUR_MS;
-      return p0 + (p1 - p0) * pct;
-    } else if (dt <= ONE_DAY_MS) {
-      const pct = (dt - ONE_HOUR_MS) / (ONE_DAY_MS - ONE_HOUR_MS);
-      return p1 + (p2 - p1) * pct;
+      return p0 + (pHistorical - p0) * pct;
     } else if (dt <= SEVEN_DAYS_MS) {
-      const pct = (dt - ONE_DAY_MS) / (SEVEN_DAYS_MS - ONE_DAY_MS);
-      return p2 + (p3 - p2) * pct;
+      return pHistorical;
     } else {
       const extraDays = (dt - SEVEN_DAYS_MS) / ONE_DAY_MS;
-      return Math.max(0.28, p3 - extraDays * 0.0005);
+      return Math.max(0.1, pHistorical - extraDays * 0.0005);
     }
   };
 
@@ -671,7 +663,7 @@ const CUSTOM_COINS = [
     circulating_supply: 100000000,
     max_supply: 1000000000,
     sparkline_in_7d: {
-      price: [0.3095, 0.3116, 0.315, 0.32, 0.322, 0.3239, 0.325]
+      price: [0.281, 0.281, 0.281, 0.281, 0.281, 0.281, 12.03]
     }
   }
 ];

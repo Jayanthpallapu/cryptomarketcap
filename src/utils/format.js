@@ -21,11 +21,11 @@ export function formatPercent(num) {
   const absNum = Math.abs(num);
   if (absNum >= 1000000) {
     const val = num / 1000000;
-    return (val % 1 === 0 ? val.toFixed(0) : val.toFixed(2)) + 'M%';
+    return Number(val.toFixed(2)) + 'M%';
   }
   if (absNum >= 1000) {
     const val = num / 1000;
-    return (val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)) + 'k%';
+    return Number(val.toFixed(2)) + 'k%';
   }
   return absNum.toFixed(2) + '%';
 }
