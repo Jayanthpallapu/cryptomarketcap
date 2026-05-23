@@ -457,7 +457,98 @@ function getRabbitXMetrics(timestamp = Date.now()) {
 }
 
 
+const GENESIS_START_PRICE = 0.6375;
+const GENESIS_START_TIME = new Date('2026-05-23T11:00:00+05:30').getTime();
+const GENESIS_THRESHOLD = GENESIS_START_PRICE * 1.20; // 0.765
+
+function getGenesisMetrics(timestamp = Date.now()) {
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+  const ONE_DAY_MS = 24 * ONE_HOUR_MS;
+  const SEVEN_DAYS_MS = 7 * ONE_DAY_MS;
+
+  const computeHourChange = (t, currentPrice) => {
+    if (currentPrice >= GENESIS_THRESHOLD) return 0;
+    const seed = Math.floor(t / 3600000);
+    const rand = ((seed * 5432 + 9876) % 233280) / 233280;
+    return parseFloat((1.67 + rand * (2.14 - 1.67)).toFixed(2));
+  };
+
+  const getPriceAtTime = (timeTarget) => {
+    let p = GENESIS_START_PRICE;
+    for (let t = GENESIS_START_TIME; t + ONE_HOUR_MS <= timeTarget; t += ONE_HOUR_MS) {
+      const change = computeHourChange(t, p);
+      p = Math.min(p * (1 + change / 100), GENESIS_THRESHOLD);
+    }
+    if (timeTarget > GENESIS_START_TIME) {
+      const hourStart = GENESIS_START_TIME + Math.floor((timeTarget - GENESIS_START_TIME) / ONE_HOUR_MS) * ONE_HOUR_MS;
+      if (timeTarget > hourStart && p < GENESIS_THRESHOLD) {
+        const change = computeHourChange(hourStart, p);
+        const progress = (timeTarget - hourStart) / ONE_HOUR_MS;
+        p = Math.min(p * (1 + (change * progress) / 100), GENESIS_THRESHOLD);
+      }
+    }
+    return p;
+  };
+
+  const currentPrice = getPriceAtTime(timestamp);
+  const price1hAgo = getPriceAtTime(timestamp - ONE_HOUR_MS);
+  const price24hAgo = getPriceAtTime(timestamp - ONE_DAY_MS);
+  const price7dAgo = getPriceAtTime(timestamp - SEVEN_DAYS_MS);
+
+  const change1h = currentPrice > price1hAgo
+    ? parseFloat((((currentPrice - price1hAgo) / price1hAgo) * 100).toFixed(2))
+    : 0.00;
+
+  const change24h = currentPrice > price24hAgo
+    ? parseFloat((((currentPrice - price24hAgo) / price24hAgo) * 100).toFixed(2))
+    : 0.00;
+
+  const change7d = currentPrice > price7dAgo
+    ? parseFloat((((currentPrice - price7dAgo) / price7dAgo) * 100).toFixed(2))
+    : 0.00;
+
+  return {
+    price: currentPrice,
+    change1h,
+    change24h,
+    change7d
+  };
+}
+
+
 const CUSTOM_COINS = [
+  {
+    id: 'genesis',
+    symbol: 'gens',
+    name: 'Genesis',
+    image: '/genesis.png',
+    get current_price() {
+      return getGenesisMetrics().price;
+    },
+    market_cap: 63750000,
+    market_cap_rank: 6,
+    total_volume: 8500000,
+    get price_change_percentage_1h_in_currency() {
+      return getGenesisMetrics().change1h;
+    },
+    get price_change_percentage_24h() {
+      return getGenesisMetrics().change24h;
+    },
+    get price_change_percentage_7d_in_currency() {
+      return getGenesisMetrics().change7d;
+    },
+    circulating_supply: 100000000,
+    max_supply: 100000000,
+    get sparkline_in_7d() {
+      const now = Date.now();
+      const points = [];
+      for (let i = 6; i >= 0; i--) {
+        const t = now - i * 24 * 3600 * 1000;
+        points.push(getGenesisMetrics(t).price);
+      }
+      return { price: points };
+    }
+  },
   {
     id: 'sphere',
     symbol: 'sphere',
@@ -804,19 +895,21 @@ export async function getCoinDetail(id) {
         large: coin.image
       },
       description: {
-        en: coin.id === 'china-inu'
-              ? 'China INU is a community-driven meme token inspired by Chinese culture and the viral Shiba Inu movement, combining Eastern heritage with the explosive energy of DeFi.'
-              : coin.id === 'bird'
-                ? 'Bird is a community-driven token soaring through the crypto skies, combining viral meme energy with real DeFi utility.'
-                : coin.id === 'microsoft'
-                  ? 'Microsoft coin represents the intersection of enterprise tech and decentralized finance, bringing trusted legacy innovation to the blockchain.'
-                  : coin.id === 'nvidia'
-                    ? 'Nvidia coin represents the frontier of AI-driven decentralized computation and graphics-accelerated blockchain technology.'
-                    : coin.id === 'quantum'
-                      ? 'Quantum is a next-generation decentralized token harnessing the power of quantum-inspired algorithms for ultra-fast, secure blockchain transactions.'
-                      : coin.id === 'rabbitx'
-                        ? 'RabbitX is a next-generation decentralized exchange token offering lightning-fast, secure, and low-latency trading experiences with robust liquidity and utility.'
-                        : 'A custom community-driven token.'
+        en: coin.id === 'genesis'
+              ? 'Genesis represents the origin of innovation, a premier token establishing the fundamental framework for the next generation of decentralized finance and web3 solutions.'
+              : coin.id === 'china-inu'
+                ? 'China INU is a community-driven meme token inspired by Chinese culture and the viral Shiba Inu movement, combining Eastern heritage with the explosive energy of DeFi.'
+                : coin.id === 'bird'
+                  ? 'Bird is a community-driven token soaring through the crypto skies, combining viral meme energy with real DeFi utility.'
+                  : coin.id === 'microsoft'
+                    ? 'Microsoft coin represents the intersection of enterprise tech and decentralized finance, bringing trusted legacy innovation to the blockchain.'
+                    : coin.id === 'nvidia'
+                      ? 'Nvidia coin represents the frontier of AI-driven decentralized computation and graphics-accelerated blockchain technology.'
+                      : coin.id === 'quantum'
+                        ? 'Quantum is a next-generation decentralized token harnessing the power of quantum-inspired algorithms for ultra-fast, secure blockchain transactions.'
+                        : coin.id === 'rabbitx'
+                          ? 'RabbitX is a next-generation decentralized exchange token offering lightning-fast, secure, and low-latency trading experiences with robust liquidity and utility.'
+                          : 'A custom community-driven token.'
       },
       market_data: {
         current_price: { usd: coin.current_price },
@@ -854,6 +947,7 @@ export async function getCoinChart(id, days = 7) {
     const volumes = [];
 
     const metricsMap = {
+      'genesis': getGenesisMetrics,
       'china-inu': getChinaINUMetrics,
       'bird': getBirdMetrics,
       'artificial-intelligence': getAIMetrics,
